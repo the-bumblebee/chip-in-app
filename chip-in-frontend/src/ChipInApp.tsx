@@ -1,23 +1,22 @@
 import { Link, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
-import Group from './pages/Group';
 import { FC } from 'react';
-import NotFound from './pages/NotFound';
-import Expense from './pages/Expense';
-import Home from './pages/Home';
+import HomeView from './pages/HomeView';
+import GroupView from './pages/GroupView';
+import ExpenseView from './pages/ExpenseView';
+import NotFoundView from './pages/NotFoundView';
 
 const ChipInApp: FC = () => {
     return (
         <Router>
             <nav>
                 <Link to="/">Home</Link>
-                <Link to="/group">Group</Link>
             </nav>
             <div>
                 <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/group" element={<Group />} />
-                    <Route path="/group/expense" element={<Expense />} />
-                    <Route path="*" element={<NotFound />} />
+                    <Route path="/" element={<HomeView />} />
+                    <Route path="/group" element={<GroupView />} />
+                    <Route path="/group/expense" element={<ExpenseView />} />
+                    <Route path="*" element={<NotFoundView />} />
                 </Routes>
             </div>
         </Router>

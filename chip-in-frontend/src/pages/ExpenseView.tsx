@@ -1,11 +1,12 @@
 // import { useState } from "react";
 
-import { useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ExpenseParticipant } from "../types/ExpenseParticipant";
+import { Expense } from "../types/Expense";
 
 
-const Expense: React.FunctionComponent = () => {
+const ExpenseView: FC = () => {
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -23,7 +24,7 @@ const Expense: React.FunctionComponent = () => {
     // 1 - B
     // 2 - C
     // 3 - D
-    const expense = location.state.expense;
+    const expense: Expense = location.state.expense;
     const [expenseParticipants, setExpenseParticipants] = useState<ExpenseParticipant[]>([
         { id: 0, userId: 0, paidAmount: 600, shareAmount: 200 },
         { id: 0, userId: 1, paidAmount: 0, shareAmount: 200 },
@@ -54,4 +55,4 @@ const Expense: React.FunctionComponent = () => {
     );
 }
 
-export default Expense;
+export default ExpenseView;

@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { OwedAmount } from "../types/OwedAmount";
 import { Expense } from "../types/Expense";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Group } from "../types/Group";
 
-const Group: React.FunctionComponent = () => {
+const GroupView: FC = () => {
 
     // A - 600 -- -400
     // B - 0 -- 200
@@ -11,12 +12,15 @@ const Group: React.FunctionComponent = () => {
     // D - 0 -- 100
 
     // useEffect -- owedAmounts and expenses
-    // const location = useLocation();
-    // const navigate = useNavigate();
+    const location = useLocation();
+    const navigate = useNavigate();
 
-    // useEffect(() => {
-    //     navigate("/");
-    // }, [navigate]);
+    useEffect(() => {
+        if (!location.state)
+            navigate("/");
+    }, [navigate]);
+
+    const group: Group = location.state.group;
 
 
     const [owedAmounts, setOwedAmount] = useState<OwedAmount[]>([
@@ -32,12 +36,13 @@ const Group: React.FunctionComponent = () => {
 
     return (
         <div>
+            <h2>{group.name}</h2>
             <ul>
                 {owedAmounts.map(owedAmount =>
                     <li key={owedAmount.id}>{owedAmount.payer} owes {owedAmount.payee} Rs. {owedAmount.amount}</li>
                 )}
             </ul>
-            <h2>Expenses</h2>
+            <h3>Expenses</h3>
             <ul>
                 {expenses.map(expense =>
                     <div key={expense.id}>
@@ -49,4 +54,4 @@ const Group: React.FunctionComponent = () => {
     );
 }
 
-export default Group;
+export default GroupView;
