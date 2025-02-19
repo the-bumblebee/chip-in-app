@@ -7,7 +7,9 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -21,7 +23,7 @@ import java.util.Set;
 public class Group {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
@@ -38,6 +40,10 @@ public class Group {
     )
     private Set<User> users = new HashSet<>();
 
+    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Expense> expenses = new ArrayList<>();
+
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS);
@@ -51,5 +57,15 @@ public class Group {
     public void removeUser(User user) {
         this.users.remove(user);
         user.getGroups().remove(this);
+    }
+
+    public void addExpense(Expense expense) {
+        this.expenses.add(expense);
+        expense.setGroup(this);
+    }
+
+    public void removeExpense(Expense expense) {
+        this.expenses.remove(expense);
+        expense.setGroup(null);
     }
 }
