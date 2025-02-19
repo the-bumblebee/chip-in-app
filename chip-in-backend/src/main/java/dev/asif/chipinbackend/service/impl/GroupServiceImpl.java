@@ -1,7 +1,9 @@
 package dev.asif.chipinbackend.service.impl;
 
 import dev.asif.chipinbackend.model.Group;
+import dev.asif.chipinbackend.model.User;
 import dev.asif.chipinbackend.repository.GroupRepository;
+import dev.asif.chipinbackend.repository.UserRepository;
 import dev.asif.chipinbackend.service.GroupService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,10 +15,12 @@ import java.util.Optional;
 public class GroupServiceImpl implements GroupService {
 
     private final GroupRepository groupRepository;
+    private final UserRepository userRepository;
 
     @Autowired
-    public GroupServiceImpl(GroupRepository groupRepository) {
+    public GroupServiceImpl(GroupRepository groupRepository, UserRepository userRepository) {
         this.groupRepository = groupRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -45,5 +49,15 @@ public class GroupServiceImpl implements GroupService {
     @Override
     public void deleteGroup(Long id) {
         groupRepository.deleteById(id);
+    }
+
+    @Override
+    public void addUserToGroup(Long userId, Long groupId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException(("User with id " + userId + " not found!")));
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new RuntimeException(("Group with id " + groupId + " not found!")));
+        group.addUser(user);
+        groupRepository.save(group);
     }
 }

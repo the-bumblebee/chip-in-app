@@ -4,6 +4,7 @@ import dev.asif.chipinbackend.model.Group;
 import dev.asif.chipinbackend.repository.GroupRepository;
 import dev.asif.chipinbackend.service.GroupService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,5 +30,9 @@ public class GroupController {
         return groupService.createGroup(group);
     }
 
-    @PostMapping("/{id}")
+    @PostMapping("/{groupId}/users/{userId}")
+    public ResponseEntity<Void> addUserToGroup(@PathVariable Long userId, @PathVariable Long groupId) {
+        groupService.addUserToGroup(userId, groupId);
+        return ResponseEntity.status(201).build();
+    }
 }
