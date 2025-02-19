@@ -1,13 +1,14 @@
 package dev.asif.chipinbackend.controller;
 
 import dev.asif.chipinbackend.model.Group;
-import dev.asif.chipinbackend.repository.GroupRepository;
+import dev.asif.chipinbackend.model.User;
 import dev.asif.chipinbackend.service.GroupService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/groups")
@@ -23,6 +24,11 @@ public class GroupController {
     @GetMapping
     public List<Group> getGroups() {
         return groupService.getAllGroups();
+    }
+
+    @GetMapping("/{groupId}/users")
+    public Set<User> getUsers(@PathVariable Long groupId){
+        return groupService.getUsersInGroup(groupId);
     }
 
     @PostMapping

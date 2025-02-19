@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class GroupServiceImpl implements GroupService {
@@ -36,6 +37,13 @@ public class GroupServiceImpl implements GroupService {
     @Override
     public List<Group> getAllGroups() {
         return groupRepository.findAll();
+    }
+
+    @Override
+    public Set<User> getUsersInGroup(Long groupId) {
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new RuntimeException("Group with id " + groupId + " not found!"));
+        return group.getUsers();
     }
 
     @Override
