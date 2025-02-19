@@ -2,6 +2,8 @@ package dev.asif.chipinbackend.controller;
 
 import dev.asif.chipinbackend.model.Group;
 import dev.asif.chipinbackend.repository.GroupRepository;
+import dev.asif.chipinbackend.service.GroupService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -10,19 +12,22 @@ import java.util.List;
 @RequestMapping("/api/groups")
 public class GroupController {
 
-    GroupRepository groupRepository;
+    private final GroupService groupService;
 
-    public GroupController(GroupRepository groupRepository) {
-        this.groupRepository = groupRepository;
+    @Autowired
+    public GroupController(GroupService groupService) {
+        this.groupService = groupService;
     }
 
     @GetMapping
     public List<Group> getGroups() {
-        return groupRepository.findAll();
+        return groupService.getAllGroups();
     }
 
     @PostMapping
     public Group createGroup(@RequestBody Group group) {
-        return groupRepository.save(group);
+        return groupService.createGroup(group);
     }
+
+    @PostMapping("/{id}")
 }

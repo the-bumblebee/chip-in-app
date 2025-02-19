@@ -1,9 +1,21 @@
 package dev.asif.chipinbackend.model;
 
 import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "groups")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Group {
 
     @Id
@@ -14,40 +26,28 @@ public class Group {
     private String name;
 
     @Column(nullable = false)
-    private String createdAt;
+    private LocalDateTime createdAt;
 
-    public Group () {
-        this.name = null;
-        this.createdAt = null;
+    @ManyToMany
+    @JoinTable(
+            name = "group_users",
+            joinColumns = @JoinColumn(name = "group_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private Set<User> users = new HashSet<>();
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS);
     }
 
-    public Group(Long id, String name, String createdAt) {
-        this.id = id;
-        this.name = name;
-        this.createdAt = createdAt;
+    public void addUser(User user) {
+        this.users.add(user);
+        user.getGroups().add(this);
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(String createdAt) {
-        this.createdAt = createdAt;
+    public void removeUser(User user) {
+        this.users.remove(user);
+        user.getGroups().remove(this);
     }
 }

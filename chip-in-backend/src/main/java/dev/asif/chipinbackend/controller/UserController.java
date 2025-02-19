@@ -2,6 +2,8 @@ package dev.asif.chipinbackend.controller;
 
 import dev.asif.chipinbackend.model.User;
 import dev.asif.chipinbackend.repository.UserRepository;
+import dev.asif.chipinbackend.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,19 +13,20 @@ import java.util.List;
 @RequestMapping("/api/users")
 public class UserController {
 
-    UserRepository userRepository;
+    private final UserService userService;
 
-    public UserController(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    @Autowired
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
     @GetMapping
     public List<User> getUsers() {
-        return userRepository.findAll();
+        return userService.getAllUsers();
     }
 
     @PostMapping
     public User createUser(@RequestBody User user) {
-        return userRepository.save(user);
+        return userService.createUser(user);
     }
 }
