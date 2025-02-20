@@ -3,11 +3,13 @@ package dev.asif.chipinbackend.dto;
 import dev.asif.chipinbackend.model.UserGroupBalance;
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Data
 public class UserGroupBalanceDTO {
     private Long userId;
-    private double totalPaidAmount;
-    private double totalShareAmount;
+    private BigDecimal totalPaidAmount;
+    private BigDecimal totalShareAmount;
 
     public UserGroupBalanceDTO(UserGroupBalance balance) {
        this.userId = balance.getUser().getId();

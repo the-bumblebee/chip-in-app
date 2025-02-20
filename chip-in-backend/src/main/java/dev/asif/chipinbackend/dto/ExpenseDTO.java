@@ -3,6 +3,7 @@ package dev.asif.chipinbackend.dto;
 import dev.asif.chipinbackend.model.Expense;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -12,7 +13,7 @@ public class ExpenseDTO {
     private Long id;
     private Long groupId;
     private String description;
-    private double totalAmount;
+    private BigDecimal totalAmount;
     private LocalDateTime createdAt;
     private Set<ExpenseParticipantDTO> participants;
 

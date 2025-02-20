@@ -3,6 +3,7 @@ package dev.asif.chipinbackend.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
@@ -25,8 +26,8 @@ public class Expense {
     @Column(name = "description", nullable = false)
     private String description;
 
-    @Column(name = "total_amount")
-    private Double totalAmount = 0.0;
+    @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)
+    private BigDecimal totalAmount = BigDecimal.ZERO;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

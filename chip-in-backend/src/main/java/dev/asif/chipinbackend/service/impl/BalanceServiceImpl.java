@@ -11,6 +11,7 @@ import dev.asif.chipinbackend.service.BalanceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,36 +42,27 @@ public class BalanceServiceImpl implements BalanceService {
         Group group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new RuntimeException("Group with id " + groupId + " not found!"));
         List<UserGroupBalance> balances = userGroupBalanceRepository.findByGroup(group).stream()
-                .sorted((balance1, balance2) -> {
-                    if (balance1.getNetBalance() - balance2.getNetBalance() < 0) {
-                        return -1;
-                    }
-                    else if (balance1.getNetBalance() - balance2.getNetBalance() > 0) {
-                        return 1;
-                    }
-                    else {
-                        return 0;
-                    }
-                }).toList();
+                .sorted((balance1, balance2) -> balance1.getNetBalance().compareTo(balance2.getNetBalance()))
+                .toList();
 
         int l = 0, r = balances.size() - 1;
-        double receivable = balances.get(l).getNetBalance();
-        double payable = balances.get(r).getNetBalance();
+        BigDecimal receivable = (l <= r) ? balances.get(l).getNetBalance() : BigDecimal.ZERO;
+        BigDecimal payable = (l <= r) ? balances.get(r).getNetBalance() : BigDecimal.ZERO;
         List<SettlementTransactionDTO> transactions = new ArrayList<>();
         while (l < r) {
-            if (receivable + payable > 0) {
-                payable += receivable;
+            if (receivable.add(payable).compareTo(BigDecimal.ZERO) > 0) {
+                payable = payable.add(receivable);
                 transactions.add(
                         new SettlementTransactionDTO(
                                 new UserDTO(balances.get(r).getUser()),
                                 new UserDTO(balances.get(l).getUser()),
-                                - receivable)
+                                receivable.negate())
                 );
                 l += 1;
                 receivable = balances.get(l).getNetBalance();
             }
-            else if (receivable + payable < 0) {
-                receivable += payable;
+            else if (receivable.add(payable).compareTo(BigDecimal.ZERO) < 0) {
+                receivable = receivable.add(payable);
                 transactions.add(
                         new SettlementTransactionDTO(
                                 new UserDTO(balances.get(r).getUser()),

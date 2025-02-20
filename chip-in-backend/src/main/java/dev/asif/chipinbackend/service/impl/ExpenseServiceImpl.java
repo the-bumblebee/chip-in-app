@@ -10,6 +10,8 @@ import dev.asif.chipinbackend.service.ExpenseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 @Service
@@ -44,8 +46,8 @@ public class ExpenseServiceImpl implements ExpenseService {
             User user = userRepository.findById(payer.getUserId())
                     .orElseThrow(() -> new RuntimeException("User with id " + payer.getUserId() + " not found!"));
         }
-        Double totalPaidAmount = request.getPayers().stream()
-                .mapToDouble(PayerDTO::getPaidAmount).sum();
+        BigDecimal totalPaidAmount = request.getPayers().stream()
+                .map(PayerDTO::getPaidAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
 
         Expense expense = new Expense();
         expense.setGroup(group);
@@ -57,8 +59,8 @@ public class ExpenseServiceImpl implements ExpenseService {
         for (PayerDTO payer : request.getPayers()) {
             User user = userRepository.findById(payer.getUserId())
                     .orElseThrow(() -> new RuntimeException("User with id " + payer.getUserId() + " not found!"));
-            saveExpenseParticipant(expense, user, payer.getPaidAmount(), 0.0);
-            updateUserGroupBalance(user, group, payer.getPaidAmount(), 0.0);
+            saveExpenseParticipant(expense, user, payer.getPaidAmount(), BigDecimal.ZERO);
+            updateUserGroupBalance(user, group, payer.getPaidAmount(), BigDecimal.ZERO);
         }
         // Find total amount
         // Create expense
@@ -85,23 +87,23 @@ public class ExpenseServiceImpl implements ExpenseService {
     }
 
     private void processEqualSplit(Expense expense, List<ParticipantDTO> participants) {
-        double shareAmount = expense.getTotalAmount() / (double) participants.size();
+        BigDecimal shareAmount = expense.getTotalAmount().divide(BigDecimal.valueOf(participants.size()), 2, RoundingMode.HALF_UP);
         for (ParticipantDTO participant : participants) {
             User user = userRepository.findById(participant.getUserId())
                     .orElseThrow(() -> new RuntimeException("User with id " + participant.getUserId() + " not found!"));
-            saveExpenseParticipant(expense, user, 0.0, shareAmount);
-            updateUserGroupBalance(user, expense.getGroup(), 0.0, shareAmount);
+            saveExpenseParticipant(expense, user, BigDecimal.ZERO, shareAmount);
+            updateUserGroupBalance(user, expense.getGroup(), BigDecimal.ZERO, shareAmount);
         }
     }
 
     private void processSharesSplit(Expense expense, List<ParticipantDTO> participants) {
         int totalShares = participants.stream().mapToInt(ParticipantDTO::getShares).sum();
         for (ParticipantDTO participant : participants) {
-            double shareAmount = (participant.getShares() / (double) totalShares) * expense.getTotalAmount();
+            BigDecimal shareAmount = expense.getTotalAmount().multiply(BigDecimal.valueOf(participant.getShares() / (double) totalShares)).setScale(2, RoundingMode.HALF_UP);
             User user = userRepository.findById(participant.getUserId())
                     .orElseThrow(() -> new RuntimeException("User with id " + participant.getUserId() + " not found!"));
-            saveExpenseParticipant(expense, user, 0.0, shareAmount);
-            updateUserGroupBalance(user, expense.getGroup(), 0.0, shareAmount);
+            saveExpenseParticipant(expense, user, BigDecimal.ZERO, shareAmount);
+            updateUserGroupBalance(user, expense.getGroup(), BigDecimal.ZERO, shareAmount);
         }
     }
 
@@ -111,43 +113,44 @@ public class ExpenseServiceImpl implements ExpenseService {
             throw new IllegalArgumentException("Percentages must sum up to 100%!");
         }
         for (ParticipantDTO participant : participants) {
-            double shareAmount = (participant.getPercentage() / 100.0) * expense.getTotalAmount();
+            BigDecimal shareAmount = expense.getTotalAmount().multiply(BigDecimal.valueOf(participant.getPercentage() / 100.0)).setScale(2, RoundingMode.HALF_UP);
             User user = userRepository.findById(participant.getUserId())
                     .orElseThrow(() -> new RuntimeException("User with id " + participant.getUserId() + " not found!"));
-            saveExpenseParticipant(expense, user, 0.0, shareAmount);
-            updateUserGroupBalance(user, expense.getGroup(), 0.0, shareAmount);
+            saveExpenseParticipant(expense, user, BigDecimal.ZERO, shareAmount);
+            updateUserGroupBalance(user, expense.getGroup(), BigDecimal.ZERO, shareAmount);
         }
     }
 
     private void processUnequalSplit(Expense expense, List<ParticipantDTO> participants) {
-        double totalShareAmount = participants.stream().mapToDouble(ParticipantDTO::getShareAmount).sum();
-        if (totalShareAmount != expense.getTotalAmount()) {
+        BigDecimal totalShareAmount = participants.stream().map(ParticipantDTO::getShareAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        if (totalShareAmount.compareTo(expense.getTotalAmount()) != 0) {
             throw new IllegalArgumentException("Total share amount must match total paid amount!");
         }
         for (ParticipantDTO participant : participants) {
             User user = userRepository.findById(participant.getUserId())
                     .orElseThrow(() -> new RuntimeException("User with id " + participant.getUserId() + " not found!"));
-            saveExpenseParticipant(expense, user, 0.0, participant.getShareAmount());
-            updateUserGroupBalance(user, expense.getGroup(), 0.0, participant.getShareAmount());
+            saveExpenseParticipant(expense, user, BigDecimal.ZERO, participant.getShareAmount());
+            updateUserGroupBalance(user, expense.getGroup(), BigDecimal.ZERO, participant.getShareAmount());
         }
     }
 
-    private void saveExpenseParticipant(Expense expense, User user, double paidAmount, double shareAmount) {
+    private void saveExpenseParticipant(Expense expense, User user, BigDecimal paidAmount, BigDecimal shareAmount) {
         ExpenseParticipant participant = expenseParticipantRepository.findByExpenseAndUser(expense, user)
-                .orElse(new ExpenseParticipant(expense, user, 0.0, 0.0));
-        if (paidAmount != 0.0) {
+                .orElse(new ExpenseParticipant(expense, user, BigDecimal.ZERO, BigDecimal.ZERO));
+        if (paidAmount.compareTo(BigDecimal.ZERO) != 0) {
             participant.setPaidAmount(paidAmount);
         }
-        if (shareAmount != 0.0) {
+        if (shareAmount.compareTo(BigDecimal.ZERO) != 0) {
             participant.setShareAmount(shareAmount);
         }
         expense.addParticipant(participant);
         expenseParticipantRepository.save(participant);
     }
 
-    private void updateUserGroupBalance(User user, Group group, double paidAmount, double shareAmount) {
+    private void updateUserGroupBalance(User user, Group group, BigDecimal paidAmount, BigDecimal shareAmount) {
         UserGroupBalance balance = userGroupBalanceRepository.findByUserAndGroup(user, group)
-                .orElse(new UserGroupBalance(user, group, 0.0, 0.0));
+                .orElse(new UserGroupBalance(user, group, BigDecimal.ZERO, BigDecimal.ZERO));
         balance.updateBalance(paidAmount, shareAmount);
         userGroupBalanceRepository.save(balance);
     }
