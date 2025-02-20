@@ -3,11 +3,14 @@ package dev.asif.chipinbackend.service.impl;
 import dev.asif.chipinbackend.dto.SettlementTransactionDTO;
 import dev.asif.chipinbackend.dto.UserDTO;
 import dev.asif.chipinbackend.dto.UserGroupBalanceDTO;
+import dev.asif.chipinbackend.exception.ResourceNotFoundException;
 import dev.asif.chipinbackend.model.Group;
+import dev.asif.chipinbackend.model.User;
 import dev.asif.chipinbackend.model.UserGroupBalance;
-import dev.asif.chipinbackend.repository.GroupRepository;
 import dev.asif.chipinbackend.repository.UserGroupBalanceRepository;
 import dev.asif.chipinbackend.service.BalanceService;
+import dev.asif.chipinbackend.service.GroupService;
+import dev.asif.chipinbackend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,19 +22,20 @@ import java.util.stream.Collectors;
 @Service
 public class BalanceServiceImpl implements BalanceService {
 
-    GroupRepository groupRepository;
+    UserService userService;
+    GroupService groupService;
     UserGroupBalanceRepository userGroupBalanceRepository;
 
     @Autowired
-    public BalanceServiceImpl(GroupRepository groupRepository, UserGroupBalanceRepository userGroupBalanceRepository){
-        this.groupRepository = groupRepository;
+    public BalanceServiceImpl(UserService userService, GroupService groupService, UserGroupBalanceRepository userGroupBalanceRepository){
+        this.userService = userService;
+        this.groupService = groupService;
         this.userGroupBalanceRepository = userGroupBalanceRepository;
     }
 
     @Override
     public List<UserGroupBalanceDTO> getAllBalancesInGroup(Long groupId) {
-        Group group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new RuntimeException("Group with id " + groupId + " not found!"));
+        Group group = groupService.getGroupById(groupId);
         return userGroupBalanceRepository.findByGroup(group).stream()
                 .map(UserGroupBalanceDTO::new)
                 .collect(Collectors.toList());
@@ -39,8 +43,7 @@ public class BalanceServiceImpl implements BalanceService {
 
     @Override
     public List<SettlementTransactionDTO> getAllSettlementTransactions(Long groupId) {
-        Group group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new RuntimeException("Group with id " + groupId + " not found!"));
+        Group group = groupService.getGroupById(groupId);
         List<UserGroupBalance> balances = userGroupBalanceRepository.findByGroup(group).stream()
                 .sorted((balance1, balance2) -> balance1.getNetBalance().compareTo(balance2.getNetBalance()))
                 .toList();
@@ -87,5 +90,20 @@ public class BalanceServiceImpl implements BalanceService {
         }
 
         return transactions;
+    }
+
+    @Override
+    public UserGroupBalance getBalanceByGroupIdAndUserId(Long groupId, Long userId) {
+        Group group = groupService.getGroupById(groupId);
+        User user = userService.getUserById(userId);
+
+        return userGroupBalanceRepository.findByGroupAndUser(group, user)
+                .orElseThrow(() -> new ResourceNotFoundException("Cannot find balance for the user in the group!"));
+    }
+
+    @Override
+    public void updateBalanceByGroupIdAndUserId(Long groupId, Long userId, BigDecimal paidAmount) {
+        UserGroupBalance balance = getBalanceByGroupIdAndUserId(groupId, userId);
+        balance.updateBalance(paidAmount, BigDecimal.ZERO);
     }
 }

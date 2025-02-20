@@ -9,6 +9,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserGroupBalanceRepository extends JpaRepository<UserGroupBalance, Long> {
-    Optional<UserGroupBalance> findByUserAndGroup(User user, Group group);
+    Optional<UserGroupBalance> findByGroupAndUser(Group group, User user);
     List<UserGroupBalance> findByGroup(Group group);
 }

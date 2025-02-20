@@ -39,6 +39,14 @@ public class ExpenseServiceImpl implements ExpenseService {
     }
 
     @Override
+    public List<ExpenseDTO> getAllExpensesInGroup(Long groupId) {
+        Group group = groupService.getGroupById(groupId);
+        return group.getExpenses().stream()
+                .map(ExpenseDTO::new)
+                .toList();
+    }
+
+    @Override
     public ExpenseDTO createExpense(Long groupId, ExpenseRequestDTO request) {
         // Validate group
         Group group = groupService.getGroupById(groupId);
