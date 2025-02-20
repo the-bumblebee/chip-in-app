@@ -1,5 +1,7 @@
 package dev.asif.chipinbackend.service.impl;
 
+import dev.asif.chipinbackend.exception.ResourceNotFoundException;
+import dev.asif.chipinbackend.exception.UserAlreadyExistsException;
 import dev.asif.chipinbackend.model.User;
 import dev.asif.chipinbackend.repository.UserRepository;
 import dev.asif.chipinbackend.service.UserService;
@@ -23,18 +25,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<?> createUser(User user) {
+    public ResponseEntity<User> createUser(User user) {
         if (userRepository.existsByEmail(user.getEmail())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("message", "User with email " + user.getEmail() + " already exists!"));
+            throw new UserAlreadyExistsException("User with email " + user.getEmail() + " already exists!");
         }
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(userRepository.save(user));
     }
 
     @Override
-    public Optional<User> getUserById(Long id) {
-        return userRepository.findById(id);
+    public User getUserById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " does not exist!"));
     }
 
     @Override

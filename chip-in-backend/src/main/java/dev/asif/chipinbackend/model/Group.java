@@ -43,6 +43,8 @@ public class Group {
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Expense> expenses = new ArrayList<>();
 
+    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserPayment> payments = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {
@@ -67,5 +69,15 @@ public class Group {
     public void removeExpense(Expense expense) {
         this.expenses.remove(expense);
         expense.setGroup(null);
+    }
+
+    public void addPayment(UserPayment payment) {
+        this.payments.add(payment);
+        payment.setGroup(this);
+    }
+
+    public void removePayment(UserPayment payment) {
+        this.payments.remove(payment);
+        payment.setGroup(null);
     }
 }

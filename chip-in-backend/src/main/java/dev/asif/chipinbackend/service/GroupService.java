@@ -9,7 +9,7 @@ import java.util.Set;
 
 public interface GroupService {
     Group createGroup(Group group);
-    Optional<Group> getGroupById(Long id);
+    Group getGroupById(Long id);
     List<Group> getAllGroups();
     Set<UserDTO> getUsersInGroup(Long groupId);
     Group updateGroup(Long id, Group groupDetails);
