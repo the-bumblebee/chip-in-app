@@ -1,14 +1,11 @@
 package dev.asif.chipinbackend.service.impl;
 
+import dev.asif.chipinbackend.dto.ExpenseDTO;
 import dev.asif.chipinbackend.dto.ExpenseRequestDTO;
 import dev.asif.chipinbackend.dto.ParticipantDTO;
 import dev.asif.chipinbackend.dto.PayerDTO;
-import dev.asif.chipinbackend.model.Expense;
-import dev.asif.chipinbackend.model.ExpenseParticipant;
-import dev.asif.chipinbackend.model.User;
-import dev.asif.chipinbackend.repository.ExpenseParticipantRepository;
-import dev.asif.chipinbackend.repository.ExpenseRepository;
-import dev.asif.chipinbackend.repository.UserRepository;
+import dev.asif.chipinbackend.model.*;
+import dev.asif.chipinbackend.repository.*;
 import dev.asif.chipinbackend.service.ExpenseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,31 +18,51 @@ public class ExpenseServiceImpl implements ExpenseService {
     private final UserRepository userRepository;
     private final ExpenseRepository expenseRepository;
     private final ExpenseParticipantRepository expenseParticipantRepository;
+    private final UserGroupBalanceRepository userGroupBalanceRepository;
+    private final GroupRepository groupRepository;
 
     @Autowired
-    public ExpenseServiceImpl(UserRepository userRepository, ExpenseRepository expenseRepository, ExpenseParticipantRepository expenseParticipantRepository) {
+    public ExpenseServiceImpl(UserRepository userRepository,
+                              ExpenseRepository expenseRepository,
+                              ExpenseParticipantRepository expenseParticipantRepository,
+                              UserGroupBalanceRepository userGroupBalanceRepository,
+                              GroupRepository groupRepository) {
         this.userRepository = userRepository;
         this.expenseRepository = expenseRepository;
         this.expenseParticipantRepository = expenseParticipantRepository;
+        this.userGroupBalanceRepository = userGroupBalanceRepository;
+        this.groupRepository = groupRepository;
     }
 
     @Override
-    public Expense createExpense(ExpenseRequestDTO request) {
+    public ExpenseDTO createExpense(Long groupId, ExpenseRequestDTO request) {
+        // Validate group
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new RuntimeException("Group with id " + groupId + " not found!"));
         // Validate payer exists or not
-        Double totalPaidAmount = 0.0;
         for (PayerDTO payer : request.getPayers()) {
             User user = userRepository.findById(payer.getUserId())
                     .orElseThrow(() -> new RuntimeException("User with id " + payer.getUserId() + " not found!"));
-            // Update totalAmountPaid for this user in group balance
-            totalPaidAmount += payer.getPaidAmount();
+        }
+        Double totalPaidAmount = request.getPayers().stream()
+                .mapToDouble(PayerDTO::getPaidAmount).sum();
+
+        Expense expense = new Expense();
+        expense.setGroup(group);
+        expense.setDescription(request.getDescription());
+        expense.setTotalAmount(totalPaidAmount);
+
+        expenseRepository.save(expense);
+
+        for (PayerDTO payer : request.getPayers()) {
+            User user = userRepository.findById(payer.getUserId())
+                    .orElseThrow(() -> new RuntimeException("User with id " + payer.getUserId() + " not found!"));
+            saveExpenseParticipant(expense, user, payer.getPaidAmount(), 0.0);
+            updateUserGroupBalance(user, group, payer.getPaidAmount(), 0.0);
         }
         // Find total amount
         // Create expense
-        Expense expense = new Expense();
-        expense.setDescription(request.getDescription());
-        expense.setTotalAmount(totalPaidAmount);
         // Writing to database at the last for consistency
-
         // processing based on splitType
         switch(request.getSplitType()) {
             case "equal":
@@ -64,14 +81,16 @@ public class ExpenseServiceImpl implements ExpenseService {
                 throw new IllegalArgumentException("Invalid split type!");
         }
 
-        expenseRepository.save(expense);
-        return expense;
+        return new ExpenseDTO(expense);
     }
 
     private void processEqualSplit(Expense expense, List<ParticipantDTO> participants) {
         double shareAmount = expense.getTotalAmount() / (double) participants.size();
         for (ParticipantDTO participant : participants) {
-            saveExpenseParticipant(expense, participant.getUserId(), shareAmount);
+            User user = userRepository.findById(participant.getUserId())
+                    .orElseThrow(() -> new RuntimeException("User with id " + participant.getUserId() + " not found!"));
+            saveExpenseParticipant(expense, user, 0.0, shareAmount);
+            updateUserGroupBalance(user, expense.getGroup(), 0.0, shareAmount);
         }
     }
 
@@ -79,7 +98,10 @@ public class ExpenseServiceImpl implements ExpenseService {
         int totalShares = participants.stream().mapToInt(ParticipantDTO::getShares).sum();
         for (ParticipantDTO participant : participants) {
             double shareAmount = (participant.getShares() / (double) totalShares) * expense.getTotalAmount();
-            saveExpenseParticipant(expense, participant.getUserId(), shareAmount);
+            User user = userRepository.findById(participant.getUserId())
+                    .orElseThrow(() -> new RuntimeException("User with id " + participant.getUserId() + " not found!"));
+            saveExpenseParticipant(expense, user, 0.0, shareAmount);
+            updateUserGroupBalance(user, expense.getGroup(), 0.0, shareAmount);
         }
     }
 
@@ -90,7 +112,10 @@ public class ExpenseServiceImpl implements ExpenseService {
         }
         for (ParticipantDTO participant : participants) {
             double shareAmount = (participant.getPercentage() / 100.0) * expense.getTotalAmount();
-            saveExpenseParticipant(expense, participant.getUserId(), shareAmount);
+            User user = userRepository.findById(participant.getUserId())
+                    .orElseThrow(() -> new RuntimeException("User with id " + participant.getUserId() + " not found!"));
+            saveExpenseParticipant(expense, user, 0.0, shareAmount);
+            updateUserGroupBalance(user, expense.getGroup(), 0.0, shareAmount);
         }
     }
 
@@ -100,17 +125,30 @@ public class ExpenseServiceImpl implements ExpenseService {
             throw new IllegalArgumentException("Total share amount must match total paid amount!");
         }
         for (ParticipantDTO participant : participants) {
-            saveExpenseParticipant(expense, participant.getUserId(), participant.getShareAmount());
+            User user = userRepository.findById(participant.getUserId())
+                    .orElseThrow(() -> new RuntimeException("User with id " + participant.getUserId() + " not found!"));
+            saveExpenseParticipant(expense, user, 0.0, participant.getShareAmount());
+            updateUserGroupBalance(user, expense.getGroup(), 0.0, participant.getShareAmount());
         }
     }
 
-    private void saveExpenseParticipant(Expense expense, Long userId, double shareAmount) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User with id " + userId +" not found!"));
-        ExpenseParticipant participant = new ExpenseParticipant();
-        participant.setUser(user);
-        participant.setExpense(expense);
-        participant.setShareAmount(shareAmount);
+    private void saveExpenseParticipant(Expense expense, User user, double paidAmount, double shareAmount) {
+        ExpenseParticipant participant = expenseParticipantRepository.findByExpenseAndUser(expense, user)
+                .orElse(new ExpenseParticipant(expense, user, 0.0, 0.0));
+        if (paidAmount != 0.0) {
+            participant.setPaidAmount(paidAmount);
+        }
+        if (shareAmount != 0.0) {
+            participant.setShareAmount(shareAmount);
+        }
+        expense.addParticipant(participant);
         expenseParticipantRepository.save(participant);
+    }
+
+    private void updateUserGroupBalance(User user, Group group, double paidAmount, double shareAmount) {
+        UserGroupBalance balance = userGroupBalanceRepository.findByUserAndGroup(user, group)
+                .orElse(new UserGroupBalance(user, group, 0.0, 0.0));
+        balance.updateBalance(paidAmount, shareAmount);
+        userGroupBalanceRepository.save(balance);
     }
 }

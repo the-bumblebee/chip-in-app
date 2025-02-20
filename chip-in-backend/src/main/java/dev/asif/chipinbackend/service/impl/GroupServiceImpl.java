@@ -1,5 +1,6 @@
 package dev.asif.chipinbackend.service.impl;
 
+import dev.asif.chipinbackend.dto.UserDTO;
 import dev.asif.chipinbackend.model.Group;
 import dev.asif.chipinbackend.model.User;
 import dev.asif.chipinbackend.repository.GroupRepository;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class GroupServiceImpl implements GroupService {
@@ -40,10 +42,12 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
-    public Set<User> getUsersInGroup(Long groupId) {
+    public Set<UserDTO> getUsersInGroup(Long groupId) {
         Group group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new RuntimeException("Group with id " + groupId + " not found!"));
-        return group.getUsers();
+        return group.getUsers().stream()
+                .map((user) -> new UserDTO(user.getId(), user.getName(), user.getEmail()))
+                .collect(Collectors.toSet());
     }
 
     @Override

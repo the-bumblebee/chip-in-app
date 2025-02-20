@@ -1,5 +1,6 @@
 package dev.asif.chipinbackend.dto;
 
+import dev.asif.chipinbackend.model.ExpenseParticipant;
 import lombok.Data;
 
 @Data

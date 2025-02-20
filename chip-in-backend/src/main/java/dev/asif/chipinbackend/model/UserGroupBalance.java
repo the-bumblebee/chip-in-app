@@ -30,6 +30,13 @@ public class UserGroupBalance {
     @Column(name = "total_share_amount")
     private double totalShareAmount = 0.0;
 
+    public UserGroupBalance(User user, Group group, double totalPaidAmount, double totalShareAmount) {
+        this.user = user;
+        this.group = group;
+        this.totalPaidAmount = totalPaidAmount;
+        this.totalShareAmount = totalShareAmount;
+    }
+
     public double getNetBalance() {
         return this.totalShareAmount - this.totalPaidAmount;
     }

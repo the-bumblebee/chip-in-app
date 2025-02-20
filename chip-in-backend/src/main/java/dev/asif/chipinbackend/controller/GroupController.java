@@ -1,7 +1,7 @@
 package dev.asif.chipinbackend.controller;
 
+import dev.asif.chipinbackend.dto.UserDTO;
 import dev.asif.chipinbackend.model.Group;
-import dev.asif.chipinbackend.model.User;
 import dev.asif.chipinbackend.service.GroupService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -22,12 +22,12 @@ public class GroupController {
     }
 
     @GetMapping
-    public List<Group> getGroups() {
+    public List<Group> getAllGroups() {
         return groupService.getAllGroups();
     }
 
     @GetMapping("/{groupId}/users")
-    public Set<User> getUsers(@PathVariable Long groupId){
+    public Set<UserDTO> getUsersInGroup(@PathVariable Long groupId){
         return groupService.getUsersInGroup(groupId);
     }
 

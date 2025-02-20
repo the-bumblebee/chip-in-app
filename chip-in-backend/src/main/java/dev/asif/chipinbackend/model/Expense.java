@@ -26,7 +26,7 @@ public class Expense {
     private String description;
 
     @Column(name = "total_amount")
-    private Double totalAmount;
+    private Double totalAmount = 0.0;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -41,5 +41,15 @@ public class Expense {
     @PrePersist
     public void onCreate() {
         createdAt = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS);
+    }
+
+    public void addParticipant(ExpenseParticipant participant) {
+        this.participants.add(participant);
+        participant.setExpense(this);
+    }
+
+    public void removeParticipant(ExpenseParticipant participant) {
+        this.participants.remove(participant);
+        participant.setExpense(this);
     }
 }
