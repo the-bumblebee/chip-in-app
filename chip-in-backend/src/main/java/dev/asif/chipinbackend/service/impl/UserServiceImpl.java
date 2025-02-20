@@ -4,9 +4,12 @@ import dev.asif.chipinbackend.model.User;
 import dev.asif.chipinbackend.repository.UserRepository;
 import dev.asif.chipinbackend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -20,8 +23,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User createUser(User user) {
-        return userRepository.save(user);
+    public ResponseEntity<?> createUser(User user) {
+        if (userRepository.existsByEmail(user.getEmail())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("message", "User with email " + user.getEmail() + " already exists!"));
+        }
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(userRepository.save(user));
     }
 
     @Override

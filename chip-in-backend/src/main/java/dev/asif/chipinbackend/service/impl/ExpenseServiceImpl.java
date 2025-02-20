@@ -45,6 +45,10 @@ public class ExpenseServiceImpl implements ExpenseService {
         for (PayerDTO payer : request.getPayers()) {
             User user = userRepository.findById(payer.getUserId())
                     .orElseThrow(() -> new RuntimeException("User with id " + payer.getUserId() + " not found!"));
+            // Validating if payer in group
+            if (!group.getUsers().contains(user)) {
+                throw new RuntimeException("User is not a member of the group!");
+            }
         }
         BigDecimal totalPaidAmount = request.getPayers().stream()
                 .map(PayerDTO::getPaidAmount).reduce(BigDecimal.ZERO, BigDecimal::add);

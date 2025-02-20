@@ -1,7 +1,6 @@
 package dev.asif.chipinbackend.controller;
 
 import dev.asif.chipinbackend.model.User;
-import dev.asif.chipinbackend.repository.UserRepository;
 import dev.asif.chipinbackend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +25,7 @@ public class UserController {
     }
 
     @PostMapping
-    public User createUser(@RequestBody User user) {
+    public ResponseEntity<?> createUser(@RequestBody User user) {
         return userService.createUser(user);
     }
 }
