@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/groups/{groupId}")
+@RequestMapping("/api/groups/{groupId}/expenses")
 public class ExpenseController {
 
     private final ExpenseService expenseService;

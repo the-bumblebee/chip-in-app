@@ -5,5 +5,5 @@ import lombok.Data;
 @Data
 public class PayerDTO {
     private Long userId;
-    private Double paidAmount;
+    private double paidAmount;
 }

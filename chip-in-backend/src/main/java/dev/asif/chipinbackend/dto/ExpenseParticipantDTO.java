@@ -6,8 +6,8 @@ import lombok.Data;
 @Data
 public class ExpenseParticipantDTO {
     private Long userId;
-    private Double paidAmount;
-    private Double shareAmount;
+    private double paidAmount;
+    private double shareAmount;
 
     public ExpenseParticipantDTO(ExpenseParticipant participant) {
         this.userId = participant.getUser().getId();

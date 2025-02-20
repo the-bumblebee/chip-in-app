@@ -12,7 +12,7 @@ public class ExpenseDTO {
     private Long id;
     private Long groupId;
     private String description;
-    private Double totalAmount;
+    private double totalAmount;
     private LocalDateTime createdAt;
     private Set<ExpenseParticipantDTO> participants;
 

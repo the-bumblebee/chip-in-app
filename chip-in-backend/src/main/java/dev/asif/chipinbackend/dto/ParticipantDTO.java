@@ -6,7 +6,7 @@ import lombok.Data;
 @Data
 public class ParticipantDTO {
     private Long userId;
-    private Double percentage;
-    private Integer shares;
-    private Double shareAmount;
+    private double percentage;
+    private int shares;
+    private double shareAmount;
 }
