@@ -1,4 +1,4 @@
-package dev.asif.chipinbackend.dto;
+package dev.asif.chipinbackend.dto.core;
 
 import dev.asif.chipinbackend.model.UserPayment;
 import lombok.Data;

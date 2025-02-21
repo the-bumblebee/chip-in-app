@@ -1,7 +1,7 @@
 package dev.asif.chipinbackend.controller;
 
 import dev.asif.chipinbackend.dto.SettlementTransactionDTO;
-import dev.asif.chipinbackend.dto.UserGroupBalanceDTO;
+import dev.asif.chipinbackend.dto.core.UserGroupBalanceDTO;
 import dev.asif.chipinbackend.service.BalanceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;

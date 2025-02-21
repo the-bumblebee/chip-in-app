@@ -1,8 +1,8 @@
 package dev.asif.chipinbackend.controller;
 
-import dev.asif.chipinbackend.dto.UserDTO;
+import dev.asif.chipinbackend.dto.core.UserDTO;
 import dev.asif.chipinbackend.model.Group;
-import dev.asif.chipinbackend.service.GroupService;
+import dev.asif.chipinbackend.service.core.GroupService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,7 +32,7 @@ public class GroupController {
     }
 
     @PostMapping
-    public Group createGroup(@RequestBody Group group) {
+    public ResponseEntity<Group> createGroup(@RequestBody Group group) {
         return groupService.createGroup(group);
     }
 

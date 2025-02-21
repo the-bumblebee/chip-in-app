@@ -1,8 +1,8 @@
 package dev.asif.chipinbackend.controller;
 
-import dev.asif.chipinbackend.dto.ExpenseDTO;
+import dev.asif.chipinbackend.dto.core.ExpenseDTO;
 import dev.asif.chipinbackend.dto.ExpenseRequestDTO;
-import dev.asif.chipinbackend.service.ExpenseService;
+import dev.asif.chipinbackend.service.ExpenseHandlerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,10 +10,10 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/groups/{groupId}/expenses")
 public class ExpenseController {
 
-    private final ExpenseService expenseService;
+    private final ExpenseHandlerService expenseService;
 
     @Autowired
-    public ExpenseController(ExpenseService expenseService) {
+    public ExpenseController(ExpenseHandlerService expenseService) {
         this.expenseService = expenseService;
     }
 

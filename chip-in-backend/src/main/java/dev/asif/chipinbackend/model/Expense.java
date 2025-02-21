@@ -6,9 +6,9 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.List;
 
 @Entity
 @Table(name = "expenses")
@@ -37,7 +37,7 @@ public class Expense {
     private Group group;
 
     @OneToMany(mappedBy = "expense")
-    private Set<ExpenseParticipant> participants = new HashSet<>();
+    private List<ExpenseParticipant> participants = new ArrayList<>();
 
     @PrePersist
     public void onCreate() {

@@ -1,14 +1,15 @@
 package dev.asif.chipinbackend.service.impl;
 
-import dev.asif.chipinbackend.dto.ExpenseDTO;
+import dev.asif.chipinbackend.dto.core.ExpenseDTO;
 import dev.asif.chipinbackend.dto.ExpenseRequestDTO;
 import dev.asif.chipinbackend.dto.ParticipantDTO;
 import dev.asif.chipinbackend.dto.PayerDTO;
+import dev.asif.chipinbackend.exception.ResourceNotFoundException;
 import dev.asif.chipinbackend.model.*;
 import dev.asif.chipinbackend.repository.*;
-import dev.asif.chipinbackend.service.ExpenseService;
-import dev.asif.chipinbackend.service.GroupService;
-import dev.asif.chipinbackend.service.UserService;
+import dev.asif.chipinbackend.service.*;
+import dev.asif.chipinbackend.service.core.GroupService;
+import dev.asif.chipinbackend.service.core.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,25 +18,31 @@ import java.math.RoundingMode;
 import java.util.List;
 
 @Service
-public class ExpenseServiceImpl implements ExpenseService {
+public class ExpenseHandlerServiceImpl implements ExpenseHandlerService {
 
     private final UserService userService;
     private final GroupService groupService;
     private final ExpenseRepository expenseRepository;
-    private final ExpenseParticipantRepository expenseParticipantRepository;
-    private final UserGroupBalanceRepository userGroupBalanceRepository;
+    private final ExpenseParticipantService expenseParticipantService;
+    private final BalanceService balanceService;
 
     @Autowired
-    public ExpenseServiceImpl(UserService userService,
-                              GroupService groupService,
-                              ExpenseRepository expenseRepository,
-                              ExpenseParticipantRepository expenseParticipantRepository,
-                              UserGroupBalanceRepository userGroupBalanceRepository) {
+    public ExpenseHandlerServiceImpl(UserService userService,
+                                     GroupService groupService,
+                                     ExpenseRepository expenseRepository,
+                                     ExpenseParticipantService expenseParticipantService,
+                                     BalanceService balanceService) {
         this.userService = userService;
         this.groupService = groupService;
         this.expenseRepository = expenseRepository;
-        this.expenseParticipantRepository = expenseParticipantRepository;
-        this.userGroupBalanceRepository = userGroupBalanceRepository;
+        this.expenseParticipantService = expenseParticipantService;
+        this.balanceService = balanceService;
+    }
+
+    @Override
+    public Expense getExpenseById(Long id) {
+        return expenseRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Expense with id " + id + " does not exist!"));
     }
 
     @Override
@@ -144,8 +151,7 @@ public class ExpenseServiceImpl implements ExpenseService {
     }
 
     private void saveExpenseParticipant(Expense expense, User user, BigDecimal paidAmount, BigDecimal shareAmount) {
-        ExpenseParticipant participant = expenseParticipantRepository.findByExpenseAndUser(expense, user)
-                .orElse(new ExpenseParticipant(expense, user, BigDecimal.ZERO, BigDecimal.ZERO));
+        ExpenseParticipant participant = expenseParticipantService.getExpenseParticipant(expense, user);
         if (paidAmount.compareTo(BigDecimal.ZERO) != 0) {
             participant.setPaidAmount(paidAmount);
         }
@@ -153,13 +159,12 @@ public class ExpenseServiceImpl implements ExpenseService {
             participant.setShareAmount(shareAmount);
         }
         expense.addParticipant(participant);
-        expenseParticipantRepository.save(participant);
+        expenseParticipantService.saveExpenseParticipant(participant);
     }
 
     private void updateUserGroupBalance(User user, Group group, BigDecimal paidAmount, BigDecimal shareAmount) {
-        UserGroupBalance balance = userGroupBalanceRepository.findByUserAndGroup(user, group)
-                .orElse(new UserGroupBalance(user, group, BigDecimal.ZERO, BigDecimal.ZERO));
+        UserGroupBalance balance = balanceService.getOrCreateBalance(group, user);
         balance.updateBalance(paidAmount, shareAmount);
-        userGroupBalanceRepository.save(balance);
+        balance = balanceService.saveBalance(balance);
     }
 }

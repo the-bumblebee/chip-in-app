@@ -1,5 +1,6 @@
 package dev.asif.chipinbackend.dto;
 
+import dev.asif.chipinbackend.dto.core.UserDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
