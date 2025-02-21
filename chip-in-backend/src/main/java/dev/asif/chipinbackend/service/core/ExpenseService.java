@@ -14,4 +14,5 @@ public interface ExpenseService {
     void deleteExpense(Long id);
 
     List<Expense> getExpensesByGroup(Group group);
+    Expense saveExpense(Expense expense);
 }

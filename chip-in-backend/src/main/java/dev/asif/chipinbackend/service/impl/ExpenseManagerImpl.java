@@ -1,13 +1,13 @@
 package dev.asif.chipinbackend.service.impl;
 
+import dev.asif.chipinbackend.dto.ExpenseResponseDTO;
 import dev.asif.chipinbackend.dto.core.ExpenseDTO;
 import dev.asif.chipinbackend.dto.ExpenseRequestDTO;
 import dev.asif.chipinbackend.dto.ParticipantDTO;
 import dev.asif.chipinbackend.dto.PayerDTO;
-import dev.asif.chipinbackend.exception.ResourceNotFoundException;
 import dev.asif.chipinbackend.model.*;
-import dev.asif.chipinbackend.repository.*;
 import dev.asif.chipinbackend.service.*;
+import dev.asif.chipinbackend.service.core.ExpenseService;
 import dev.asif.chipinbackend.service.core.GroupService;
 import dev.asif.chipinbackend.service.core.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,41 +15,42 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class ExpenseHandlerServiceImpl implements ExpenseHandlerService {
+public class ExpenseManagerImpl implements ExpenseManager {
 
     private final UserService userService;
     private final GroupService groupService;
-    private final ExpenseRepository expenseRepository;
+    private final ExpenseService expenseService;
     private final ExpenseParticipantService expenseParticipantService;
-    private final BalanceService balanceService;
+    private final GroupBalanceManager balanceService;
 
     @Autowired
-    public ExpenseHandlerServiceImpl(UserService userService,
-                                     GroupService groupService,
-                                     ExpenseRepository expenseRepository,
-                                     ExpenseParticipantService expenseParticipantService,
-                                     BalanceService balanceService) {
+    public ExpenseManagerImpl(UserService userService,
+                              GroupService groupService,
+                              ExpenseService expenseService,
+                              ExpenseParticipantService expenseParticipantService,
+                              GroupBalanceManager balanceService) {
         this.userService = userService;
         this.groupService = groupService;
-        this.expenseRepository = expenseRepository;
+        this.expenseService = expenseService;
         this.expenseParticipantService = expenseParticipantService;
         this.balanceService = balanceService;
     }
 
-    @Override
-    public Expense getExpenseById(Long id) {
-        return expenseRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Expense with id " + id + " does not exist!"));
-    }
+    // @Override
+    // public Expense getExpenseById(Long id) {
+    //     return expenseRepository.findById(id)
+    //             .orElseThrow(() -> new ResourceNotFoundException("Expense with id " + id + " does not exist!"));
+    // }
 
     @Override
-    public List<ExpenseDTO> getAllExpensesInGroup(Long groupId) {
+    public List<ExpenseResponseDTO> getAllExpensesInGroup(Long groupId) {
         Group group = groupService.getGroupById(groupId);
-        return group.getExpenses().stream()
-                .map(ExpenseDTO::new)
+        return expenseService.getExpensesByGroup(group).stream()
+                .map(ExpenseResponseDTO::new)
                 .toList();
     }
 
@@ -69,12 +70,7 @@ public class ExpenseHandlerServiceImpl implements ExpenseHandlerService {
         BigDecimal totalPaidAmount = request.getPayers().stream()
                 .map(PayerDTO::getPaidAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        Expense expense = new Expense();
-        expense.setGroup(group);
-        expense.setDescription(request.getDescription());
-        expense.setTotalAmount(totalPaidAmount);
-
-        expenseRepository.save(expense);
+        Expense expense = expenseService.createExpense(request.getDescription(), totalPaidAmount, group, new ArrayList<>());
 
         for (PayerDTO payer : request.getPayers()) {
             User user = userService.getUserById(payer.getUserId());
@@ -159,7 +155,7 @@ public class ExpenseHandlerServiceImpl implements ExpenseHandlerService {
             participant.setShareAmount(shareAmount);
         }
         expense.addParticipant(participant);
-        expenseParticipantService.saveExpenseParticipant(participant);
+        expenseService.saveExpense(expense);
     }
 
     private void updateUserGroupBalance(User user, Group group, BigDecimal paidAmount, BigDecimal shareAmount) {

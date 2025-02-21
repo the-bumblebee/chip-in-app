@@ -56,4 +56,9 @@ public class ExpenseServiceImpl implements ExpenseService {
     public List<Expense> getExpensesByGroup(Group group) {
         return expenseRepository.findByGroup(group);
     }
+
+    @Override
+    public Expense saveExpense(Expense expense) {
+        return expenseRepository.save(expense);
+    }
 }

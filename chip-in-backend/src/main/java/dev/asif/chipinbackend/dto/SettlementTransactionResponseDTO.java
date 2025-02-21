@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 
 @Data
 @AllArgsConstructor
-public class SettlementTransactionDTO {
+public class SettlementTransactionResponseDTO {
     private UserDTO payer;
     private UserDTO payee;
     private BigDecimal amount;

@@ -19,8 +19,8 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<Map<String, String>> handleUserAlreadyExistsException(UserAlreadyExistsException ex) {
+    @ExceptionHandler(ResourceAlreadyExistsException.class)
+    public ResponseEntity<Map<String, String>> handleUserAlreadyExistsException(ResourceAlreadyExistsException ex) {
         Map<String, String> errorResponse = new HashMap<>();
         errorResponse.put("http_code", String.valueOf(HttpStatus.CONFLICT));
         errorResponse.put("error", ex.getMessage());

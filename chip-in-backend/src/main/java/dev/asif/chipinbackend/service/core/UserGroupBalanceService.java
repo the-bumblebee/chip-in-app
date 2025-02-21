@@ -5,6 +5,7 @@ import dev.asif.chipinbackend.model.User;
 import dev.asif.chipinbackend.model.UserGroupBalance;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public interface UserGroupBalanceService {
     UserGroupBalance getUserGroupBalanceById(Long id);
@@ -13,5 +14,6 @@ public interface UserGroupBalanceService {
     void deleteUserGroupBalance(Long id);
 
     UserGroupBalance getBalanceByGroupAndUser(Group group, User user);
+    List<UserGroupBalance> getBalancesByGroup(Group group);
     UserGroupBalance adjustBalance(Long id, BigDecimal paidAmount, BigDecimal shareAmount);
 }

@@ -1,8 +1,8 @@
 package dev.asif.chipinbackend.controller;
 
-import dev.asif.chipinbackend.dto.SettlementTransactionDTO;
-import dev.asif.chipinbackend.dto.core.UserGroupBalanceDTO;
-import dev.asif.chipinbackend.service.BalanceService;
+import dev.asif.chipinbackend.dto.GroupBalanceResponseDTO;
+import dev.asif.chipinbackend.dto.SettlementTransactionResponseDTO;
+import dev.asif.chipinbackend.service.GroupBalanceManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,20 +15,20 @@ import java.util.List;
 @RequestMapping("/api/groups/{groupId}/balance")
 public class BalanceController {
 
-    BalanceService balanceService;
+    GroupBalanceManager balanceService;
 
     @Autowired
-    public BalanceController(BalanceService balanceService) {
+    public BalanceController(GroupBalanceManager balanceService) {
         this.balanceService = balanceService;
     }
 
     @GetMapping
-    public List<UserGroupBalanceDTO> getAllBalances(@PathVariable Long groupId) {
+    public List<GroupBalanceResponseDTO> getAllBalances(@PathVariable Long groupId) {
         return balanceService.getAllBalancesInGroup(groupId);
     }
 
     @GetMapping("/transactions")
-    public List<SettlementTransactionDTO> getAllSettlementTransactions(@PathVariable Long groupId) {
+    public List<SettlementTransactionResponseDTO> getAllSettlementTransactions(@PathVariable Long groupId) {
         return balanceService.getAllSettlementTransactions(groupId);
     }
 }

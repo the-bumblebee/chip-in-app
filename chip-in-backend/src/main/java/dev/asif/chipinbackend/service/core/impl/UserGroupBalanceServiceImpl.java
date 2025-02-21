@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 public class UserGroupBalanceServiceImpl implements UserGroupBalanceService {
@@ -54,6 +55,11 @@ public class UserGroupBalanceServiceImpl implements UserGroupBalanceService {
     public UserGroupBalance getBalanceByGroupAndUser(Group group, User user) {
         return userGroupBalanceRepository.findByGroupAndUser(group, user)
                 .orElseThrow(() -> new ResourceNotFoundException("Balance resource does not exist for the specific user and group combo!"));
+    }
+
+    @Override
+    public List<UserGroupBalance> getBalancesByGroup(Group group) {
+        return userGroupBalanceRepository.findByGroup(group);
     }
 
     @Override
