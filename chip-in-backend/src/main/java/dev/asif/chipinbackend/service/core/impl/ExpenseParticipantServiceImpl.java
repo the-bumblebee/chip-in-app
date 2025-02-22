@@ -9,6 +9,8 @@ import dev.asif.chipinbackend.service.core.ExpenseParticipantService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+
 @Service
 public class ExpenseParticipantServiceImpl implements ExpenseParticipantService {
 
@@ -47,5 +49,16 @@ public class ExpenseParticipantServiceImpl implements ExpenseParticipantService 
     public ExpenseParticipant getParticipantByExpenseAndUser(Expense expense, User user) {
         return expenseParticipantRepository.findByExpenseAndUser(expense, user)
                 .orElseThrow(() -> new ResourceNotFoundException("ExpenseParticipant resource not found for the specific user and expense!"));
+    }
+
+    @Override
+    public ExpenseParticipant getOrNewParticipant(Expense expense, User user) {
+        return expenseParticipantRepository.findByExpenseAndUser(expense, user)
+                .orElse(new ExpenseParticipant(expense, user, BigDecimal.ZERO, BigDecimal.ZERO));
+    }
+
+    @Override
+    public ExpenseParticipant saveExpenseParticipant(ExpenseParticipant expenseParticipant) {
+        return expenseParticipantRepository.save(expenseParticipant);
     }
 }

@@ -57,7 +57,11 @@ public class GroupServiceImpl implements GroupService {
         return groupRepository.findAll();
     }
 
-    // @Override
+    @Override
+    public Group saveGroup(Group group) {
+        return groupRepository.save(group);
+    }
+// @Override
     // public void addUserToGroup(Long userId, Long groupId) {
     //     User user = userService.getUserById(userId);
     //     Group group = getGroupById(groupId);

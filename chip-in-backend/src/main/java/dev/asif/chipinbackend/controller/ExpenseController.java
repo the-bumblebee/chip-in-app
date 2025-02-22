@@ -10,15 +10,15 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/groups/{groupId}/expenses")
 public class ExpenseController {
 
-    private final ExpenseManager expenseService;
+    private final ExpenseManager expenseManager;
 
     @Autowired
-    public ExpenseController(ExpenseManager expenseService) {
-        this.expenseService = expenseService;
+    public ExpenseController(ExpenseManager expenseManager) {
+        this.expenseManager = expenseManager;
     }
 
     @PostMapping
-    public ExpenseDTO createExpense(@PathVariable Long groupId, @RequestBody ExpenseRequestDTO request) {
-        return expenseService.createExpense(groupId, request);
+    public ExpenseDTO createExpense(@PathVariable Long groupId, @RequestBody ExpenseRequestDTO expenseRequestDTO) {
+        return expenseManager.createExpense(groupId, expenseRequestDTO);
     }
 }

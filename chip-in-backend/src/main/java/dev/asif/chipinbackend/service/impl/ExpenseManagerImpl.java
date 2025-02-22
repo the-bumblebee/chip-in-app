@@ -7,11 +7,10 @@ import dev.asif.chipinbackend.dto.ParticipantDTO;
 import dev.asif.chipinbackend.dto.PayerDTO;
 import dev.asif.chipinbackend.model.*;
 import dev.asif.chipinbackend.service.*;
-import dev.asif.chipinbackend.service.core.ExpenseService;
-import dev.asif.chipinbackend.service.core.GroupService;
-import dev.asif.chipinbackend.service.core.UserService;
+import dev.asif.chipinbackend.service.core.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -19,32 +18,27 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@Transactional
 public class ExpenseManagerImpl implements ExpenseManager {
 
     private final UserService userService;
     private final GroupService groupService;
     private final ExpenseService expenseService;
     private final ExpenseParticipantService expenseParticipantService;
-    private final GroupBalanceManager balanceService;
+    private final UserGroupBalanceService userGroupBalanceService;
 
     @Autowired
     public ExpenseManagerImpl(UserService userService,
                               GroupService groupService,
                               ExpenseService expenseService,
                               ExpenseParticipantService expenseParticipantService,
-                              GroupBalanceManager balanceService) {
+                              UserGroupBalanceService userGroupBalanceService) {
         this.userService = userService;
         this.groupService = groupService;
         this.expenseService = expenseService;
         this.expenseParticipantService = expenseParticipantService;
-        this.balanceService = balanceService;
+        this.userGroupBalanceService = userGroupBalanceService;
     }
-
-    // @Override
-    // public Expense getExpenseById(Long id) {
-    //     return expenseRepository.findById(id)
-    //             .orElseThrow(() -> new ResourceNotFoundException("Expense with id " + id + " does not exist!"));
-    // }
 
     @Override
     public List<ExpenseResponseDTO> getAllExpensesInGroup(Long groupId) {
@@ -55,44 +49,44 @@ public class ExpenseManagerImpl implements ExpenseManager {
     }
 
     @Override
-    public ExpenseDTO createExpense(Long groupId, ExpenseRequestDTO request) {
+    public ExpenseDTO createExpense(Long groupId, ExpenseRequestDTO expenseRequestDTO) {
         // Validate group
         Group group = groupService.getGroupById(groupId);
 
         // Validate payer exists or not
-        for (PayerDTO payer : request.getPayers()) {
+        for (PayerDTO payer : expenseRequestDTO.getPayers()) {
             User user = userService.getUserById(payer.getUserId());
             // Validating if payer in group
             if (!group.getUsers().contains(user)) {
                 throw new RuntimeException("User is not a member of the group!");
             }
         }
-        BigDecimal totalPaidAmount = request.getPayers().stream()
+        BigDecimal totalPaidAmount = expenseRequestDTO.getPayers().stream()
                 .map(PayerDTO::getPaidAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        Expense expense = expenseService.createExpense(request.getDescription(), totalPaidAmount, group, new ArrayList<>());
+        Expense expense = expenseService.createExpense(expenseRequestDTO.getDescription(), totalPaidAmount, group, new ArrayList<>());
 
-        for (PayerDTO payer : request.getPayers()) {
+        for (PayerDTO payer : expenseRequestDTO.getPayers()) {
             User user = userService.getUserById(payer.getUserId());
             saveExpenseParticipant(expense, user, payer.getPaidAmount(), BigDecimal.ZERO);
-            updateUserGroupBalance(user, group, payer.getPaidAmount(), BigDecimal.ZERO);
+            updateUserGroupBalance(group, user, payer.getPaidAmount(), BigDecimal.ZERO);
         }
         // Find total amount
         // Create expense
         // Writing to database at the last for consistency
         // processing based on splitType
-        switch(request.getSplitType()) {
+        switch(expenseRequestDTO.getSplitType()) {
             case "equal":
-                processEqualSplit(expense, request.getParticipants());
+                processEqualSplit(expense, expenseRequestDTO.getParticipants());
                 break;
             case "shares":
-                processSharesSplit(expense, request.getParticipants());
+                processSharesSplit(expense, expenseRequestDTO.getParticipants());
                 break;
             case "percentage":
-                processPercentageSplit(expense, request.getParticipants());
+                processPercentageSplit(expense, expenseRequestDTO.getParticipants());
                 break;
             case "unequal":
-                processUnequalSplit(expense, request.getParticipants());
+                processUnequalSplit(expense, expenseRequestDTO.getParticipants());
                 break;
             default:
                 throw new IllegalArgumentException("Invalid split type!");
@@ -106,7 +100,7 @@ public class ExpenseManagerImpl implements ExpenseManager {
         for (ParticipantDTO participant : participants) {
             User user = userService.getUserById(participant.getUserId());
             saveExpenseParticipant(expense, user, BigDecimal.ZERO, shareAmount);
-            updateUserGroupBalance(user, expense.getGroup(), BigDecimal.ZERO, shareAmount);
+            updateUserGroupBalance(expense.getGroup(), user, BigDecimal.ZERO, shareAmount);
         }
     }
 
@@ -116,7 +110,7 @@ public class ExpenseManagerImpl implements ExpenseManager {
             BigDecimal shareAmount = expense.getTotalAmount().multiply(BigDecimal.valueOf(participant.getShares() / (double) totalShares)).setScale(2, RoundingMode.HALF_UP);
             User user = userService.getUserById(participant.getUserId());
             saveExpenseParticipant(expense, user, BigDecimal.ZERO, shareAmount);
-            updateUserGroupBalance(user, expense.getGroup(), BigDecimal.ZERO, shareAmount);
+            updateUserGroupBalance(expense.getGroup(), user, BigDecimal.ZERO, shareAmount);
         }
     }
 
@@ -129,7 +123,7 @@ public class ExpenseManagerImpl implements ExpenseManager {
             BigDecimal shareAmount = expense.getTotalAmount().multiply(BigDecimal.valueOf(participant.getPercentage() / 100.0)).setScale(2, RoundingMode.HALF_UP);
             User user = userService.getUserById(participant.getUserId());
             saveExpenseParticipant(expense, user, BigDecimal.ZERO, shareAmount);
-            updateUserGroupBalance(user, expense.getGroup(), BigDecimal.ZERO, shareAmount);
+            updateUserGroupBalance(expense.getGroup(), user, BigDecimal.ZERO, shareAmount);
         }
     }
 
@@ -142,12 +136,12 @@ public class ExpenseManagerImpl implements ExpenseManager {
         for (ParticipantDTO participant : participants) {
             User user = userService.getUserById(participant.getUserId());
             saveExpenseParticipant(expense, user, BigDecimal.ZERO, participant.getShareAmount());
-            updateUserGroupBalance(user, expense.getGroup(), BigDecimal.ZERO, participant.getShareAmount());
+            updateUserGroupBalance(expense.getGroup(), user, BigDecimal.ZERO, participant.getShareAmount());
         }
     }
 
     private void saveExpenseParticipant(Expense expense, User user, BigDecimal paidAmount, BigDecimal shareAmount) {
-        ExpenseParticipant participant = expenseParticipantService.getExpenseParticipant(expense, user);
+        ExpenseParticipant participant = expenseParticipantService.getOrNewParticipant(expense, user);
         if (paidAmount.compareTo(BigDecimal.ZERO) != 0) {
             participant.setPaidAmount(paidAmount);
         }
@@ -155,12 +149,13 @@ public class ExpenseManagerImpl implements ExpenseManager {
             participant.setShareAmount(shareAmount);
         }
         expense.addParticipant(participant);
-        expenseService.saveExpense(expense);
+        participant = expenseParticipantService.saveExpenseParticipant(participant);
+        expense = expenseService.saveExpense(expense);
     }
 
-    private void updateUserGroupBalance(User user, Group group, BigDecimal paidAmount, BigDecimal shareAmount) {
-        UserGroupBalance balance = balanceService.getOrCreateBalance(group, user);
+    private void updateUserGroupBalance(Group group, User user, BigDecimal paidAmount, BigDecimal shareAmount) {
+        UserGroupBalance balance = userGroupBalanceService.getOrNewBalance(group, user);
         balance.updateBalance(paidAmount, shareAmount);
-        balance = balanceService.saveBalance(balance);
+        balance = userGroupBalanceService.saveUserGroupBalance(balance);
     }
 }

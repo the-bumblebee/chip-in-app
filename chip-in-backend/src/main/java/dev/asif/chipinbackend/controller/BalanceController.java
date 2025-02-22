@@ -2,7 +2,10 @@ package dev.asif.chipinbackend.controller;
 
 import dev.asif.chipinbackend.dto.GroupBalanceResponseDTO;
 import dev.asif.chipinbackend.dto.SettlementTransactionResponseDTO;
-import dev.asif.chipinbackend.service.GroupBalanceManager;
+import dev.asif.chipinbackend.model.Group;
+import dev.asif.chipinbackend.service.SettlementManager;
+import dev.asif.chipinbackend.service.core.GroupService;
+import dev.asif.chipinbackend.service.core.UserGroupBalanceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,20 +18,27 @@ import java.util.List;
 @RequestMapping("/api/groups/{groupId}/balance")
 public class BalanceController {
 
-    GroupBalanceManager balanceService;
+    GroupService groupService;
+    UserGroupBalanceService userGroupBalanceService;
+    SettlementManager settlementManager;
 
     @Autowired
-    public BalanceController(GroupBalanceManager balanceService) {
-        this.balanceService = balanceService;
+    public BalanceController(GroupService groupService, UserGroupBalanceService userGroupBalanceService, SettlementManager settlementManager) {
+        this.userGroupBalanceService = userGroupBalanceService;
+        this.groupService = groupService;
+        this.settlementManager = settlementManager;
     }
 
     @GetMapping
     public List<GroupBalanceResponseDTO> getAllBalances(@PathVariable Long groupId) {
-        return balanceService.getAllBalancesInGroup(groupId);
+        Group group = groupService.getGroupById(groupId);
+        return userGroupBalanceService.getBalancesByGroup(group).stream()
+                .map(GroupBalanceResponseDTO::new)
+                .toList();
     }
 
     @GetMapping("/transactions")
     public List<SettlementTransactionResponseDTO> getAllSettlementTransactions(@PathVariable Long groupId) {
-        return balanceService.getAllSettlementTransactions(groupId);
+        return settlementManager.getAllSettlementTransactions(groupId);
     }
 }

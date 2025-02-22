@@ -1,14 +1,15 @@
 package dev.asif.chipinbackend.controller;
 
-import dev.asif.chipinbackend.dto.core.UserDTO;
+import dev.asif.chipinbackend.dto.GroupResponseDTO;
 import dev.asif.chipinbackend.model.Group;
+import dev.asif.chipinbackend.service.UserGroupManager;
 import dev.asif.chipinbackend.service.core.GroupService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Set;
 
 @RestController
 @RequestMapping("/api/groups")
@@ -22,23 +23,15 @@ public class GroupController {
     }
 
     @GetMapping
-    public List<Group> getAllGroups() {
-        return groupService.getAllGroups();
-    }
-
-    @GetMapping("/{groupId}/users")
-    public Set<UserDTO> getUsersInGroup(@PathVariable Long groupId){
-        return groupService.getUsersInGroup(groupId);
+    public List<GroupResponseDTO> getAllGroups() {
+        return groupService.getAllGroups().stream()
+                .map(GroupResponseDTO::new)
+                .toList();
     }
 
     @PostMapping
-    public ResponseEntity<Group> createGroup(@RequestBody Group group) {
-        return groupService.createGroup(group);
-    }
-
-    @PostMapping("/{groupId}/users/{userId}")
-    public ResponseEntity<Void> addUserToGroup(@PathVariable Long userId, @PathVariable Long groupId) {
-        groupService.addUserToGroup(userId, groupId);
-        return ResponseEntity.status(201).build();
+    public ResponseEntity<GroupResponseDTO> createGroup(@RequestBody Group group) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new GroupResponseDTO(groupService.createGroup(group)));
     }
 }

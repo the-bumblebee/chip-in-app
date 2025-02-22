@@ -1,5 +1,6 @@
 package dev.asif.chipinbackend.service.core;
 
+import dev.asif.chipinbackend.model.Group;
 import dev.asif.chipinbackend.model.User;
 import org.springframework.http.ResponseEntity;
 
@@ -12,4 +13,6 @@ public interface UserService {
     void deleteUser(Long id);
 
     List<User> getAllUsers();
+    List<User> getUsersByGroup(Group group);
+    User saveUser(User user);
 }

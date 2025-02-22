@@ -38,6 +38,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleGlobalException(Exception ex) {
         Map<String, String> errorResponse = new HashMap<>();
+        ex.printStackTrace();
         errorResponse.put("http_code", String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR));
         errorResponse.put("error", ex.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);

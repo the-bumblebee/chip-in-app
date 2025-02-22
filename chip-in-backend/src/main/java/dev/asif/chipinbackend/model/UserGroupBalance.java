@@ -32,9 +32,9 @@ public class UserGroupBalance {
     @Column(name = "total_share_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal totalShareAmount = BigDecimal.ZERO;
 
-    public UserGroupBalance(User user, Group group, BigDecimal totalPaidAmount, BigDecimal totalShareAmount) {
-        this.user = user;
+    public UserGroupBalance(Group group, User user, BigDecimal totalPaidAmount, BigDecimal totalShareAmount) {
         this.group = group;
+        this.user = user;
         this.totalPaidAmount = totalPaidAmount;
         this.totalShareAmount = totalShareAmount;
     }

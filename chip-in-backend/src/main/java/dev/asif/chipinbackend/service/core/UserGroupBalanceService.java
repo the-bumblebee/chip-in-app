@@ -15,5 +15,7 @@ public interface UserGroupBalanceService {
 
     UserGroupBalance getBalanceByGroupAndUser(Group group, User user);
     List<UserGroupBalance> getBalancesByGroup(Group group);
+    UserGroupBalance getOrNewBalance(Group group, User user);
     UserGroupBalance adjustBalance(Long id, BigDecimal paidAmount, BigDecimal shareAmount);
+    UserGroupBalance saveUserGroupBalance(UserGroupBalance userGroupBalance);
 }

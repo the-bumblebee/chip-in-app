@@ -12,6 +12,7 @@ public interface GroupService {
     void deleteGroup(Long id);
 
     List<Group> getAllGroups();
+    Group saveGroup(Group group);
 
     // void addUserToGroup(Long userId, Long groupId);
     // List<UserDTO> getUsersInGroup(Long groupId);

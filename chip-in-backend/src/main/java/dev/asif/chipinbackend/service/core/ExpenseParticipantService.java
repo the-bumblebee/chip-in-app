@@ -13,4 +13,6 @@ public interface ExpenseParticipantService {
     void deleteExpenseParticipant(Long id);
 
     ExpenseParticipant getParticipantByExpenseAndUser(Expense expense, User user);
+    ExpenseParticipant getOrNewParticipant(Expense expense, User user);
+    ExpenseParticipant saveExpenseParticipant(ExpenseParticipant expenseParticipant);
 }

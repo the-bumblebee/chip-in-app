@@ -2,6 +2,7 @@ package dev.asif.chipinbackend.service.core.impl;
 
 import dev.asif.chipinbackend.exception.ResourceAlreadyExistsException;
 import dev.asif.chipinbackend.exception.ResourceNotFoundException;
+import dev.asif.chipinbackend.model.Group;
 import dev.asif.chipinbackend.model.User;
 import dev.asif.chipinbackend.repository.UserRepository;
 import dev.asif.chipinbackend.service.core.UserService;
@@ -50,5 +51,15 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<User> getAllUsers() {
         return userRepository.findAll();
+    }
+
+    @Override
+    public List<User> getUsersByGroup(Group group) {
+        return group.getUsers();
+    }
+
+    @Override
+    public User saveUser(User user) {
+        return userRepository.save(user);
     }
 }

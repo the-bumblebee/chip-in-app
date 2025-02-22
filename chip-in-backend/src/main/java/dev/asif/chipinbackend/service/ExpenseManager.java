@@ -8,5 +8,5 @@ import java.util.List;
 
 public interface ExpenseManager {
     List<ExpenseResponseDTO> getAllExpensesInGroup(Long groupId);
-    ExpenseDTO createExpense(Long groupId, ExpenseRequestDTO request);
+    ExpenseDTO createExpense(Long groupId, ExpenseRequestDTO expenseRequestDTO);
 }

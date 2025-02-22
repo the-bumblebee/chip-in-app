@@ -51,6 +51,6 @@ public class Expense {
 
     public void removeParticipant(ExpenseParticipant participant) {
         this.participants.remove(participant);
-        participant.setExpense(this);
+        participant.setExpense(null);
     }
 }

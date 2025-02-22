@@ -63,9 +63,20 @@ public class UserGroupBalanceServiceImpl implements UserGroupBalanceService {
     }
 
     @Override
+    public UserGroupBalance getOrNewBalance(Group group, User user) {
+        return userGroupBalanceRepository.findByGroupAndUser(group, user)
+                .orElse(new UserGroupBalance(group, user, BigDecimal.ZERO, BigDecimal.ZERO));
+    }
+
+    @Override
     public UserGroupBalance adjustBalance(Long id, BigDecimal paidAmount, BigDecimal shareAmount) {
         UserGroupBalance userGroupBalance = getUserGroupBalanceById(id);
         userGroupBalance.updateBalance(paidAmount, shareAmount);
+        return userGroupBalanceRepository.save(userGroupBalance);
+    }
+
+    @Override
+    public UserGroupBalance saveUserGroupBalance(UserGroupBalance userGroupBalance) {
         return userGroupBalanceRepository.save(userGroupBalance);
     }
 }
