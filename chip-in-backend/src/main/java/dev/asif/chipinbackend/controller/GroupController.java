@@ -2,7 +2,6 @@ package dev.asif.chipinbackend.controller;
 
 import dev.asif.chipinbackend.dto.GroupResponseDTO;
 import dev.asif.chipinbackend.model.Group;
-import dev.asif.chipinbackend.service.UserGroupManager;
 import dev.asif.chipinbackend.service.core.GroupService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

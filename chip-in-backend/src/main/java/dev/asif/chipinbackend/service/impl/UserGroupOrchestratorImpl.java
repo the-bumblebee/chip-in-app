@@ -3,7 +3,7 @@ package dev.asif.chipinbackend.service.impl;
 import dev.asif.chipinbackend.dto.core.UserDTO;
 import dev.asif.chipinbackend.model.Group;
 import dev.asif.chipinbackend.model.User;
-import dev.asif.chipinbackend.service.UserGroupManager;
+import dev.asif.chipinbackend.service.UserGroupOrchestrator;
 import dev.asif.chipinbackend.service.core.GroupService;
 import dev.asif.chipinbackend.service.core.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,13 +14,13 @@ import java.util.List;
 
 @Service
 @Transactional
-public class UserGroupManagerImpl implements UserGroupManager {
+public class UserGroupOrchestratorImpl implements UserGroupOrchestrator {
 
     private final UserService userService;
     private final GroupService groupService;
 
     @Autowired
-    public UserGroupManagerImpl(UserService userService, GroupService groupService) {
+    public UserGroupOrchestratorImpl(UserService userService, GroupService groupService) {
         this.userService = userService;
         this.groupService = groupService;
     }

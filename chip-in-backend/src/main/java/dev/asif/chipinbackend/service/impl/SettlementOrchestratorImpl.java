@@ -4,10 +4,9 @@ import dev.asif.chipinbackend.dto.SettlementTransactionResponseDTO;
 import dev.asif.chipinbackend.dto.core.UserDTO;
 import dev.asif.chipinbackend.model.Group;
 import dev.asif.chipinbackend.model.UserGroupBalance;
-import dev.asif.chipinbackend.service.SettlementManager;
+import dev.asif.chipinbackend.service.SettlementOrchestrator;
 import dev.asif.chipinbackend.service.core.GroupService;
 import dev.asif.chipinbackend.service.core.UserGroupBalanceService;
-import dev.asif.chipinbackend.service.core.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,13 +17,13 @@ import java.util.List;
 
 @Service
 @Transactional
-public class SettlementManagerImpl implements SettlementManager {
+public class SettlementOrchestratorImpl implements SettlementOrchestrator {
 
     private final GroupService groupService;
     private final UserGroupBalanceService userGroupBalanceService;
 
     @Autowired
-    public SettlementManagerImpl(GroupService groupService, UserGroupBalanceService userGroupBalanceService){
+    public SettlementOrchestratorImpl(GroupService groupService, UserGroupBalanceService userGroupBalanceService){
         this.groupService = groupService;
         this.userGroupBalanceService = userGroupBalanceService;
     }

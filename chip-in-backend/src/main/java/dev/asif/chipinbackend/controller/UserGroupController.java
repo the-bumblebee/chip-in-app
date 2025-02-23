@@ -1,7 +1,7 @@
 package dev.asif.chipinbackend.controller;
 
 import dev.asif.chipinbackend.dto.core.UserDTO;
-import dev.asif.chipinbackend.service.UserGroupManager;
+import dev.asif.chipinbackend.service.UserGroupOrchestrator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,21 +13,21 @@ import java.util.List;
 @RequestMapping("/api/groups/{groupId}/users")
 public class UserGroupController {
 
-    private final UserGroupManager userGroupManager;
+    private final UserGroupOrchestrator userGroupOrchestrator;
 
     @Autowired
-    public UserGroupController(UserGroupManager userGroupManager) {
-        this.userGroupManager = userGroupManager;
+    public UserGroupController(UserGroupOrchestrator userGroupOrchestrator) {
+        this.userGroupOrchestrator = userGroupOrchestrator;
     }
 
     @GetMapping
     public List<UserDTO> getUsersInGroup(@PathVariable Long groupId) {
-        return userGroupManager.getUsersInGroup(groupId);
+        return userGroupOrchestrator.getUsersInGroup(groupId);
     }
 
     @PostMapping("/{userId}")
     public ResponseEntity<Void> addUserToGroup(@PathVariable Long groupId, @PathVariable Long userId) {
-        userGroupManager.addUserToGroup(groupId, userId);
+        userGroupOrchestrator.addUserToGroup(groupId, userId);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 }

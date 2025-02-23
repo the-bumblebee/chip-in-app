@@ -18,7 +18,7 @@ import java.util.List;
 
 @Service
 @Transactional
-public class ExpenseManagerImpl implements ExpenseManager {
+public class ExpenseOrchestratorImpl implements ExpenseOrchestrator {
 
     private final UserService userService;
     private final GroupService groupService;
@@ -27,11 +27,11 @@ public class ExpenseManagerImpl implements ExpenseManager {
     private final UserGroupBalanceService userGroupBalanceService;
 
     @Autowired
-    public ExpenseManagerImpl(UserService userService,
-                              GroupService groupService,
-                              ExpenseService expenseService,
-                              ExpenseParticipantService expenseParticipantService,
-                              UserGroupBalanceService userGroupBalanceService) {
+    public ExpenseOrchestratorImpl(UserService userService,
+                                   GroupService groupService,
+                                   ExpenseService expenseService,
+                                   ExpenseParticipantService expenseParticipantService,
+                                   UserGroupBalanceService userGroupBalanceService) {
         this.userService = userService;
         this.groupService = groupService;
         this.expenseService = expenseService;

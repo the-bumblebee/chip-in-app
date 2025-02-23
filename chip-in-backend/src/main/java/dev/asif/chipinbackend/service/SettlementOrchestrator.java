@@ -4,6 +4,6 @@ import dev.asif.chipinbackend.dto.SettlementTransactionResponseDTO;
 
 import java.util.List;
 
-public interface SettlementManager {
+public interface SettlementOrchestrator {
     List<SettlementTransactionResponseDTO> getAllSettlementTransactions(Long groupId);
 }
