@@ -1,7 +1,6 @@
 package dev.asif.chipinbackend.service.impl;
 
 import dev.asif.chipinbackend.dto.ExpenseResponseDTO;
-import dev.asif.chipinbackend.dto.core.ExpenseDTO;
 import dev.asif.chipinbackend.dto.ExpenseRequestDTO;
 import dev.asif.chipinbackend.dto.ParticipantDTO;
 import dev.asif.chipinbackend.dto.PayerDTO;
@@ -49,7 +48,7 @@ public class ExpenseManagerImpl implements ExpenseManager {
     }
 
     @Override
-    public ExpenseDTO createExpense(Long groupId, ExpenseRequestDTO expenseRequestDTO) {
+    public ExpenseResponseDTO createExpense(Long groupId, ExpenseRequestDTO expenseRequestDTO) {
         // Validate group
         Group group = groupService.getGroupById(groupId);
 
@@ -92,7 +91,41 @@ public class ExpenseManagerImpl implements ExpenseManager {
                 throw new IllegalArgumentException("Invalid split type!");
         }
 
-        return new ExpenseDTO(expense);
+        return new ExpenseResponseDTO(expense);
+    }
+
+    @Override
+    public ExpenseResponseDTO updateExpense(Long groupId, Long expenseId, ExpenseRequestDTO expenseRequestDTO) {
+        Group group = groupService.getGroupById(groupId);
+        Expense expense = expenseService.getExpenseById(expenseId);
+
+        // Subtract old paid and share amounts for each participant from the user group balance
+        for (ExpenseParticipant participant : expense.getParticipants()) {
+            UserGroupBalance balance = userGroupBalanceService.getBalanceByGroupAndUser(group, participant.getUser());
+            balance.updateBalance(participant.getPaidAmount().negate(), participant.getShareAmount().negate());
+            userGroupBalanceService.saveUserGroupBalance(balance);
+        }
+
+        return createExpense(groupId, expenseRequestDTO);
+    }
+
+    @Override
+    public void deleteExpense(Long groupId, Long expenseId) {
+        Group group = groupService.getGroupById(groupId);
+        Expense expense = expenseService.getExpenseById(expenseId);
+
+        // Subtract paid and share amounts for each participant from the user group balance
+        // Delete expense participant
+        for (ExpenseParticipant participant : expense.getParticipants()) {
+            UserGroupBalance balance = userGroupBalanceService.getBalanceByGroupAndUser(group, participant.getUser());
+            balance.updateBalance(participant.getPaidAmount().negate(), participant.getShareAmount().negate());
+            userGroupBalanceService.saveUserGroupBalance(balance);
+            expenseParticipantService.deleteExpenseParticipant(participant.getId());
+        }
+
+        group.removeExpense(expense);
+        groupService.saveGroup(group);
+        expenseService.deleteExpense(expenseId);
     }
 
     private void processEqualSplit(Expense expense, List<ParticipantDTO> participants) {
