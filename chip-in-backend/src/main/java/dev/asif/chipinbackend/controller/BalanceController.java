@@ -3,7 +3,7 @@ package dev.asif.chipinbackend.controller;
 import dev.asif.chipinbackend.dto.GroupBalanceResponseDTO;
 import dev.asif.chipinbackend.dto.SettlementTransactionResponseDTO;
 import dev.asif.chipinbackend.model.Group;
-import dev.asif.chipinbackend.service.SettlementOrchestrator;
+import dev.asif.chipinbackend.service.PaymentOrchestrator;
 import dev.asif.chipinbackend.service.core.GroupService;
 import dev.asif.chipinbackend.service.core.UserGroupBalanceService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,13 +20,13 @@ public class BalanceController {
 
     GroupService groupService;
     UserGroupBalanceService userGroupBalanceService;
-    SettlementOrchestrator settlementOrchestrator;
+    PaymentOrchestrator paymentOrchestrator;
 
     @Autowired
-    public BalanceController(GroupService groupService, UserGroupBalanceService userGroupBalanceService, SettlementOrchestrator settlementOrchestrator) {
+    public BalanceController(GroupService groupService, UserGroupBalanceService userGroupBalanceService, PaymentOrchestrator paymentOrchestrator) {
         this.userGroupBalanceService = userGroupBalanceService;
         this.groupService = groupService;
-        this.settlementOrchestrator = settlementOrchestrator;
+        this.paymentOrchestrator = paymentOrchestrator;
     }
 
     @GetMapping
@@ -39,6 +39,6 @@ public class BalanceController {
 
     @GetMapping("/transactions")
     public List<SettlementTransactionResponseDTO> getAllSettlementTransactions(@PathVariable Long groupId) {
-        return settlementOrchestrator.getAllSettlementTransactions(groupId);
+        return paymentOrchestrator.getAllSettlementTransactions(groupId);
     }
 }

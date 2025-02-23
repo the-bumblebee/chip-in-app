@@ -1,12 +1,18 @@
 package dev.asif.chipinbackend.service.impl;
 
+import dev.asif.chipinbackend.dto.PaymentRequestDTO;
+import dev.asif.chipinbackend.dto.PaymentResponseDTO;
 import dev.asif.chipinbackend.dto.SettlementTransactionResponseDTO;
 import dev.asif.chipinbackend.dto.core.UserDTO;
 import dev.asif.chipinbackend.model.Group;
+import dev.asif.chipinbackend.model.User;
 import dev.asif.chipinbackend.model.UserGroupBalance;
-import dev.asif.chipinbackend.service.SettlementOrchestrator;
+import dev.asif.chipinbackend.model.UserPayment;
+import dev.asif.chipinbackend.service.PaymentOrchestrator;
 import dev.asif.chipinbackend.service.core.GroupService;
 import dev.asif.chipinbackend.service.core.UserGroupBalanceService;
+import dev.asif.chipinbackend.service.core.UserPaymentService;
+import dev.asif.chipinbackend.service.core.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,15 +23,40 @@ import java.util.List;
 
 @Service
 @Transactional
-public class SettlementOrchestratorImpl implements SettlementOrchestrator {
+public class PaymentOrchestratorImpl implements PaymentOrchestrator {
 
+    private final UserService userService;
     private final GroupService groupService;
+    private final UserPaymentService userPaymentService;
     private final UserGroupBalanceService userGroupBalanceService;
 
     @Autowired
-    public SettlementOrchestratorImpl(GroupService groupService, UserGroupBalanceService userGroupBalanceService){
+    public PaymentOrchestratorImpl(
+            UserService userService,
+            GroupService groupService,
+            UserPaymentService userPaymentService,
+            UserGroupBalanceService userGroupBalanceService){
+        this.userService = userService;
         this.groupService = groupService;
+        this.userPaymentService = userPaymentService;
         this.userGroupBalanceService = userGroupBalanceService;
+    }
+
+    @Override
+    public PaymentResponseDTO createPayment(Long groupId, PaymentRequestDTO paymentRequestDTO) {
+        Group group = groupService.getGroupById(groupId);
+        User payer = userService.getUserById(paymentRequestDTO.getPayerId());
+        User payee = userService.getUserById(paymentRequestDTO.getPayeeId());
+        if (!group.getUsers().contains(payer) || !group.getUsers().contains(payee)) {
+            throw new IllegalArgumentException("User is not a member of the group!");
+        }
+        UserGroupBalance payerGroupBalance = userGroupBalanceService.getBalanceByGroupAndUser(group, payer);
+        UserGroupBalance payeeGroupBalance = userGroupBalanceService.getBalanceByGroupAndUser(group, payee);
+        payerGroupBalance.updateBalance(paymentRequestDTO.getAmount(), BigDecimal.ZERO);
+        payeeGroupBalance.updateBalance(paymentRequestDTO.getAmount().negate(), BigDecimal.ZERO);
+        userGroupBalanceService.saveUserGroupBalance(payerGroupBalance);
+        userGroupBalanceService.saveUserGroupBalance(payeeGroupBalance);
+        return new PaymentResponseDTO(userPaymentService.createUserPayment(payer, payee, group, paymentRequestDTO.getAmount()));
     }
 
     @Override

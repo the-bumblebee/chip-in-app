@@ -1,5 +1,6 @@
 package dev.asif.chipinbackend.controller;
 
+import dev.asif.chipinbackend.dto.ExpenseDetailResponseDTO;
 import dev.asif.chipinbackend.dto.ExpenseResponseDTO;
 import dev.asif.chipinbackend.dto.ExpenseRequestDTO;
 import dev.asif.chipinbackend.service.ExpenseOrchestrator;
@@ -28,13 +29,13 @@ public class ExpenseController {
     }
 
     @PostMapping
-    public ResponseEntity<ExpenseResponseDTO> createExpense(@PathVariable Long groupId, @RequestBody ExpenseRequestDTO expenseRequestDTO) {
+    public ResponseEntity<ExpenseDetailResponseDTO> createExpense(@PathVariable Long groupId, @RequestBody ExpenseRequestDTO expenseRequestDTO) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(expenseOrchestrator.createExpense(groupId, expenseRequestDTO));
     }
 
     @PutMapping("/{expenseId}")
-    public ResponseEntity<ExpenseResponseDTO> updateExpense(@PathVariable Long groupId, @PathVariable Long expenseId, @RequestBody ExpenseRequestDTO expenseRequestDTO) {
+    public ResponseEntity<ExpenseDetailResponseDTO> updateExpense(@PathVariable Long groupId, @PathVariable Long expenseId, @RequestBody ExpenseRequestDTO expenseRequestDTO) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(expenseOrchestrator.updateExpense(groupId, expenseId, expenseRequestDTO));
     }

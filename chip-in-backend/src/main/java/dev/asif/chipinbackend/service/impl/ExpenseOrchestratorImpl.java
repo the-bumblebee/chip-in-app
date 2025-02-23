@@ -1,9 +1,6 @@
 package dev.asif.chipinbackend.service.impl;
 
-import dev.asif.chipinbackend.dto.ExpenseResponseDTO;
-import dev.asif.chipinbackend.dto.ExpenseRequestDTO;
-import dev.asif.chipinbackend.dto.ParticipantDTO;
-import dev.asif.chipinbackend.dto.PayerDTO;
+import dev.asif.chipinbackend.dto.*;
 import dev.asif.chipinbackend.model.*;
 import dev.asif.chipinbackend.service.*;
 import dev.asif.chipinbackend.service.core.*;
@@ -48,54 +45,14 @@ public class ExpenseOrchestratorImpl implements ExpenseOrchestrator {
     }
 
     @Override
-    public ExpenseResponseDTO createExpense(Long groupId, ExpenseRequestDTO expenseRequestDTO) {
+    public ExpenseDetailResponseDTO createExpense(Long groupId, ExpenseRequestDTO expenseRequestDTO) {
         // Validate group
         Group group = groupService.getGroupById(groupId);
-
-        // Validate payer exists or not
-        for (PayerDTO payer : expenseRequestDTO.getPayers()) {
-            User user = userService.getUserById(payer.getUserId());
-            // Validating if payer in group
-            if (!group.getUsers().contains(user)) {
-                throw new RuntimeException("User is not a member of the group!");
-            }
-        }
-        BigDecimal totalPaidAmount = expenseRequestDTO.getPayers().stream()
-                .map(PayerDTO::getPaidAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        Expense expense = expenseService.createExpense(expenseRequestDTO.getDescription(), totalPaidAmount, group, new ArrayList<>());
-
-        for (PayerDTO payer : expenseRequestDTO.getPayers()) {
-            User user = userService.getUserById(payer.getUserId());
-            saveExpenseParticipant(expense, user, payer.getPaidAmount(), BigDecimal.ZERO);
-            updateUserGroupBalance(group, user, payer.getPaidAmount(), BigDecimal.ZERO);
-        }
-        // Find total amount
-        // Create expense
-        // Writing to database at the last for consistency
-        // processing based on splitType
-        switch(expenseRequestDTO.getSplitType()) {
-            case "equal":
-                processEqualSplit(expense, expenseRequestDTO.getParticipants());
-                break;
-            case "shares":
-                processSharesSplit(expense, expenseRequestDTO.getParticipants());
-                break;
-            case "percentage":
-                processPercentageSplit(expense, expenseRequestDTO.getParticipants());
-                break;
-            case "unequal":
-                processUnequalSplit(expense, expenseRequestDTO.getParticipants());
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid split type!");
-        }
-
-        return new ExpenseResponseDTO(expense);
+        return processExpenseRequest(group, null, expenseRequestDTO);
     }
 
     @Override
-    public ExpenseResponseDTO updateExpense(Long groupId, Long expenseId, ExpenseRequestDTO expenseRequestDTO) {
+    public ExpenseDetailResponseDTO updateExpense(Long groupId, Long expenseId, ExpenseRequestDTO expenseRequestDTO) {
         Group group = groupService.getGroupById(groupId);
         Expense expense = expenseService.getExpenseById(expenseId);
 
@@ -106,7 +63,7 @@ public class ExpenseOrchestratorImpl implements ExpenseOrchestrator {
             userGroupBalanceService.saveUserGroupBalance(balance);
         }
 
-        return createExpense(groupId, expenseRequestDTO);
+        return processExpenseRequest(group, expense, expenseRequestDTO);
     }
 
     @Override
@@ -126,6 +83,57 @@ public class ExpenseOrchestratorImpl implements ExpenseOrchestrator {
         group.removeExpense(expense);
         groupService.saveGroup(group);
         expenseService.deleteExpense(expenseId);
+    }
+
+    private ExpenseDetailResponseDTO processExpenseRequest(Group group, Expense expense, ExpenseRequestDTO expenseRequestDTO) {
+        // Validating if payer exists or not
+        // and if payer exists in group
+        for (PayerDTO payer : expenseRequestDTO.getPayers()) {
+            User user = userService.getUserById(payer.getUserId());
+            if (!group.getUsers().contains(user)) {
+                throw new RuntimeException("User is not a member of the group!");
+            }
+        }
+
+        // Calculating total paid amount from all payers
+        BigDecimal totalPaidAmount = expenseRequestDTO.getPayers().stream()
+                .map(PayerDTO::getPaidAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        if (expense == null) {
+            expense = new Expense();
+            expense.setGroup(group);
+            expense.setParticipants(new ArrayList<>());
+        }
+        expense.setDescription(expenseRequestDTO.getDescription());
+        expense.setTotalAmount(totalPaidAmount);
+
+        // Creating/updating expense participant with paid amount
+        // and updating group balance for all the payers
+        for (PayerDTO payer : expenseRequestDTO.getPayers()) {
+            User user = userService.getUserById(payer.getUserId());
+            saveExpenseParticipant(expense, user, payer.getPaidAmount(), BigDecimal.ZERO);
+            updateUserGroupBalance(group, user, payer.getPaidAmount(), BigDecimal.ZERO);
+        }
+
+        // Processing based on split type
+        switch(expenseRequestDTO.getSplitType()) {
+            case "equal":
+                processEqualSplit(expense, expenseRequestDTO.getParticipants());
+                break;
+            case "shares":
+                processSharesSplit(expense, expenseRequestDTO.getParticipants());
+                break;
+            case "percentage":
+                processPercentageSplit(expense, expenseRequestDTO.getParticipants());
+                break;
+            case "unequal":
+                processUnequalSplit(expense, expenseRequestDTO.getParticipants());
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid split type!");
+        }
+
+        return new ExpenseDetailResponseDTO(expense);
     }
 
     private void processEqualSplit(Expense expense, List<ParticipantDTO> participants) {
