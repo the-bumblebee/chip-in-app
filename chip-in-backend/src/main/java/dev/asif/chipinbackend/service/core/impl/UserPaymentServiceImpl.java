@@ -36,26 +36,6 @@ public class UserPaymentServiceImpl implements UserPaymentService {
         userPayment.setGroup(group);
         userPayment.setAmount(amount);
         return userPaymentRepository.save(userPayment);
-        // Group group = groupService.getGroupById(groupId);
-        // User payer = userService.getUserById(paymentDTO.getPayerId());
-        // User payee = userService.getUserById(paymentDTO.getPayeeId());
-        //
-        // UserGroupBalance payerBalance = balanceService.getBalanceByGroupIdAndUserId(groupId, paymentDTO.getPayerId());
-        // UserGroupBalance payeeBalance = balanceService.getBalanceByGroupIdAndUserId(groupId, paymentDTO.getPayeeId());
-        //
-        // payerBalance.updateBalance(paymentDTO.getAmount(), BigDecimal.ZERO);
-        // payeeBalance.updateBalance(paymentDTO.getAmount().negate(), BigDecimal.ZERO);
-        //
-        // balanceService.saveBalance(payerBalance);
-        // balanceService.saveBalance(payeeBalance);
-        //
-        // UserPayment payment = new UserPayment();
-        // payment.setPayer(payer);
-        // payment.setPayee(payee);
-        // payment.setGroup(group);
-        // payment.setAmount(paymentDTO.getAmount());
-        //
-        // return userPaymentRepository.save(payment);
     }
 
     @Override

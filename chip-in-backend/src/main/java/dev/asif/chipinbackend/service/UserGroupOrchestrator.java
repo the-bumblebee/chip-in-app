@@ -7,4 +7,5 @@ import java.util.List;
 public interface UserGroupOrchestrator {
     List<UserDTO> getUsersInGroup(Long groupId);
     void addUserToGroup(Long groupId, Long userId);
+    void removeUserFromGroup(Long groupId, Long userId);
 }

@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/groups/{groupId}/users")
@@ -26,8 +27,16 @@ public class UserGroupController {
     }
 
     @PostMapping("/{userId}")
-    public ResponseEntity<Void> addUserToGroup(@PathVariable Long groupId, @PathVariable Long userId) {
+    public ResponseEntity<Map<String, String>> addUserToGroup(@PathVariable Long groupId, @PathVariable Long userId) {
         userGroupOrchestrator.addUserToGroup(groupId, userId);
-        return ResponseEntity.status(HttpStatus.OK).build();
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(Map.of("message", "User added to group!"));
+    }
+
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<Map<String, String>> removeUserFromGroup(@PathVariable Long groupId, @PathVariable Long userId) {
+        userGroupOrchestrator.removeUserFromGroup(groupId, userId);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(Map.of("message", "User remove from group!"));
     }
 }
