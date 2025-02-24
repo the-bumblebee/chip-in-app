@@ -14,6 +14,7 @@ public interface UserPaymentService {
     void deleteUserPayment(Long id);
 
     List<UserPayment> getAllUserPaymentsByGroup(Group group);
+    UserPayment saveUserPayment(UserPayment userPayment);
 
     // List<UserPaymentDTO> getAllPaymentsInGroup(Long groupId);
     // UserPayment createPayment(Long groupId, UserPaymentDTO payment);

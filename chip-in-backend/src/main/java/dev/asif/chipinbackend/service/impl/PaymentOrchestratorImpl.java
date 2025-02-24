@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Transactional
@@ -43,6 +44,14 @@ public class PaymentOrchestratorImpl implements PaymentOrchestrator {
     }
 
     @Override
+    public List<PaymentResponseDTO> getAllPaymentsInGroup(Long groupId) {
+        Group group = groupService.getGroupById(groupId);
+        return userPaymentService.getAllUserPaymentsByGroup(group).stream()
+                .map(PaymentResponseDTO::new)
+                .toList();
+    }
+
+    @Override
     public PaymentResponseDTO createPayment(Long groupId, PaymentRequestDTO paymentRequestDTO) {
         Group group = groupService.getGroupById(groupId);
         User payer = userService.getUserById(paymentRequestDTO.getPayerId());
@@ -57,6 +66,36 @@ public class PaymentOrchestratorImpl implements PaymentOrchestrator {
         userGroupBalanceService.saveUserGroupBalance(payerGroupBalance);
         userGroupBalanceService.saveUserGroupBalance(payeeGroupBalance);
         return new PaymentResponseDTO(userPaymentService.createUserPayment(payer, payee, group, paymentRequestDTO.getAmount()));
+    }
+
+    @Override
+    public PaymentResponseDTO updatePayment(Long groupId, Long paymentId, PaymentRequestDTO paymentRequestDTO) {
+        Group group = groupService.getGroupById(groupId);
+        UserPayment userPayment = userPaymentService.getUserPaymentById(paymentId);
+        if (!userPayment.getPayer().getId().equals(paymentRequestDTO.getPayerId()) || !userPayment.getPayee().getId().equals(paymentRequestDTO.getPayeeId())) {
+            throw new IllegalArgumentException("Users cannot be updated for a payment!");
+        }
+        UserGroupBalance payerGroupBalance = userGroupBalanceService.getBalanceByGroupAndUser(group, userPayment.getPayer());
+        UserGroupBalance payeeGroupBalance = userGroupBalanceService.getBalanceByGroupAndUser(group, userPayment.getPayee());
+        BigDecimal adjustedAmount = paymentRequestDTO.getAmount().add(userPayment.getAmount().negate());
+        payerGroupBalance.updateBalance(adjustedAmount, BigDecimal.ZERO);
+        payeeGroupBalance.updateBalance(adjustedAmount.negate(), BigDecimal.ZERO);
+        userGroupBalanceService.saveUserGroupBalance(payerGroupBalance);
+        userGroupBalanceService.saveUserGroupBalance(payeeGroupBalance);
+        userPayment.setAmount(paymentRequestDTO.getAmount());
+        return new PaymentResponseDTO(userPaymentService.saveUserPayment(userPayment));
+    }
+
+    @Override
+    public void deletePayment(Long groupId, Long paymentId) {
+        Group group = groupService.getGroupById(groupId);
+        UserPayment userPayment = userPaymentService.getUserPaymentById(paymentId);
+        if (!group.getPayments().contains(userPayment)) {
+            throw new IllegalArgumentException("The group does not contain the specified payment!");
+        }
+        group.removePayment(userPayment);
+        groupService.saveGroup(group);
+        userPaymentService.deleteUserPayment(paymentId);
     }
 
     @Override

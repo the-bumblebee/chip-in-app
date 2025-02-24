@@ -76,4 +76,9 @@ public class UserPaymentServiceImpl implements UserPaymentService {
     public List<UserPayment> getAllUserPaymentsByGroup(Group group) {
         return group.getPayments();
     }
+
+    @Override
+    public UserPayment saveUserPayment(UserPayment userPayment) {
+        return userPaymentRepository.save(userPayment);
+    }
 }

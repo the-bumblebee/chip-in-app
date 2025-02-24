@@ -71,6 +71,10 @@ public class ExpenseOrchestratorImpl implements ExpenseOrchestrator {
         Group group = groupService.getGroupById(groupId);
         Expense expense = expenseService.getExpenseById(expenseId);
 
+        if (!group.getExpenses().contains(expense)) {
+            throw new IllegalArgumentException("The group does not contain the specified expense!");
+        }
+
         // Subtract paid and share amounts for each participant from the user group balance
         // Delete expense participant
         for (ExpenseParticipant participant : expense.getParticipants()) {
